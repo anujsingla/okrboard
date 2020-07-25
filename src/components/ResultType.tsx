@@ -18,7 +18,7 @@ export function ResultType() {
             <InputGroup>
               <Form.Control type="number" placeholder="0" />
               <InputGroup.Append>
-                <InputGroup.Text>$</InputGroup.Text>
+                <InputGroup.Text>%</InputGroup.Text>
               </InputGroup.Append>
             </InputGroup>
           </div>
@@ -27,7 +27,7 @@ export function ResultType() {
             <InputGroup>
               <Form.Control type="number" placeholder="100" />
               <InputGroup.Append>
-                <InputGroup.Text>$</InputGroup.Text>
+                <InputGroup.Text>%</InputGroup.Text>
               </InputGroup.Append>
             </InputGroup>
           </div>

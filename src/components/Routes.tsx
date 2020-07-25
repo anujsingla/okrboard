@@ -8,7 +8,7 @@ export function Routes() {
       <Navbar collapseOnSelect expand="lg" bg="primary" variant="dark">
         <Navbar.Brand>
           <NavLink to="/okr-board" className="navbar-brand">
-            OKR Board
+            OKR++
           </NavLink>
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
@@ -31,7 +31,7 @@ export function Routes() {
             </Nav.Item>
             <Nav.Item as="li">
               <NavLink to="/create-keyresult" className="nav-link">
-                Create KeyResult
+                Create Key Result
               </NavLink>
             </Nav.Item>
           </Nav>

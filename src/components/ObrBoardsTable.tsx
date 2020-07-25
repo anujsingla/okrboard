@@ -79,7 +79,7 @@ export function ObrBoardsTable(props: IProps) {
         id: 'grade'
       },
       {
-        Header: 'Assignee',
+        Header: 'Owner',
         id: 'assignee',
         Cell: ({ row }) => (
             <span>{`${row.original.owner.firstName} ${row.original.owner.lastName}`}</span>

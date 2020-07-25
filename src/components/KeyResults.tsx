@@ -55,10 +55,10 @@ export function KeyResults() {
     return (
       <form noValidate onSubmit={handleSubmit}>
         <Form.Group controlId="keyResultTitle">
-          <Form.Label>Workstation</Form.Label>
+          <Form.Label>Department</Form.Label>
           <Select
             onChange={option => setFieldValue('workstationName', option)}
-            placeholder="select workstation"
+            placeholder="select department"
             name="workstationName"
             value={values.workstationName}
             options={workstationOptions}
@@ -66,7 +66,7 @@ export function KeyResults() {
           <Form.Label>Objective</Form.Label>
           <Select
             onChange={option => setFieldValue('objectiveName', option)}
-            placeholder="select workstation"
+            placeholder="select objective"
             name="objectiveName"
             value={values.objectiveName}
             options={objectiveOptions}
@@ -94,7 +94,7 @@ export function KeyResults() {
           />
           <Form.Control.Feedback type="invalid">{errors['description']}</Form.Control.Feedback>
         </Form.Group>
-        <Button type="submit">Create key Result</Button>
+        <Button type="submit">Create Key Result</Button>
       </form>
     );
   };
