@@ -38,10 +38,9 @@
 }
 
 .react-datepicker-wrapper {
-    display: block !important;
+  display: block !important;
 }
 
 .result-type {
-    border: 1px solid red;
-
+  border: 1px solid red;
 }

@@ -1,16 +1,23 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './css/index.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import './css/app.scss';
+import '@patternfly/react-core/dist/styles/base.css';
+import '@patternfly/patternfly/patternfly-addons.css';
 import 'noty/lib/noty.css';
 import 'noty/lib/themes/bootstrap-v4.css';
+import 'react-dates/initialize';
+import 'react-dates/lib/css/_datepicker.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { HashRouter, Route } from 'react-router-dom';
+import { AppLayout } from './components/AppLayout';
 
 ReactDOM.render(
   <HashRouter>
-    <Route exact={false} path="/" component={App} />
+    <AppLayout>
+      <Route exact={false} path="/" component={App} />
+    </AppLayout>
   </HashRouter>,
   document.getElementById('root')
 );

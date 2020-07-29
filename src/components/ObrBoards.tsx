@@ -1,7 +1,7 @@
 import React from 'react';
 import { ObrBoardsTable } from './ObrBoardsTable';
 import { useQuery } from 'react-query';
-import { getKeyResult } from '../api/workstation';
+import { getKeyResult } from '../api/apis';
 import { keys, groupBy, map, flatten } from 'lodash';
 import { Container, Row, Col } from 'react-bootstrap';
 

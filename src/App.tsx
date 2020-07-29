@@ -1,30 +1,26 @@
 import React from 'react';
 import './css/App.css';
-import { Routes } from './components/Routes';
 import { CreateDepartment } from './components/CreateDepartment';
-import { CreateObjective } from './components/CreateObjective';
-import { ObrBoards } from './components/ObrBoards';
+import { Objective } from './components/Objectives';
+// import { ObrBoards } from './components/ObrBoards';
 import { KeyResults } from './components/KeyResults';
 import { Route, Switch, Redirect } from 'react-router-dom';
-import { WorkstationContextProvider } from './context/WorkstationContext';
+import { ApplicationContextProvider } from './context/ApplicationContext';
 import { CreateUser } from './components/CreateUser';
 
 function App() {
-  return (
-    <WorkstationContextProvider>
-      <Routes />
-      <main>
-        <Switch>
-          <Route path={`/create-department`} name="createDepartment" exact={true} component={CreateDepartment} />
-          <Route path={`/create-objective`} name="createObjective" exact={true} component={CreateObjective} />
-          <Route path={`/create-user`} name="createUser" exact={true} component={CreateUser} />
-          <Route path={`/create-keyresult`} name="createKeyResult" exact={true} component={KeyResults} />
-          <Route path={`/okr-board`} name="okrBoard" exact={true} component={ObrBoards} />
-          <Redirect to={'/okr-board'} />
-        </Switch>
-      </main>
-    </WorkstationContextProvider>
-  );
+    return (
+        <ApplicationContextProvider>
+            <Switch>
+                <Route path={`/department`} name="createDepartment" exact={true} component={CreateDepartment} />
+                <Route path={`/objective`} name="Objective" exact={true} component={Objective} />
+                <Route path={`/user`} name="createUser" exact={true} component={CreateUser} />
+                <Route path={`/keyresult`} name="createKeyResult" exact={true} component={KeyResults} />
+                <Route path={`/objective`} name="okrBoard" exact={true} component={Objective} />
+                <Redirect to={'/objective'} />
+            </Switch>
+        </ApplicationContextProvider>
+    );
 }
 
 export default App;

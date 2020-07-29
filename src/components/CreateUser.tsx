@@ -3,7 +3,7 @@ import { Spinner, Form, Button, Container, Row, Col } from 'react-bootstrap';
 import { Formik, FormikProps } from 'formik';
 import { object, string } from 'yup';
 import { useQuery, useMutation } from 'react-query';
-import { getAllDepartments, createUsers } from '../api/workstation';
+import { getAllDepartments, createUsers } from '../api/apis';
 import Select from 'react-select';
 import map from 'lodash/map';
 import { ILabel } from '../models/shared';

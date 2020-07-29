@@ -3,7 +3,7 @@ import { Spinner, Form, Button, Container, Row, Col } from 'react-bootstrap';
 import { Formik, FormikProps } from 'formik';
 import { object, string } from 'yup';
 import { useMutation } from 'react-query';
-import { addDepartment } from '../api/workstation';
+import { addDepartment } from '../api/apis';
 import { addSuccessMessage, addDangerMessage } from '../utils/alertUtil';
 
 interface ICreateDepartment {

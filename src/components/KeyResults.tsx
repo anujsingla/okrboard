@@ -6,9 +6,8 @@ import { ResultType } from './ResultType';
 import Select from 'react-select';
 import { ILabel } from '../models/shared';
 import { useQuery, useMutation } from 'react-query';
-import { getAllDepartments, getObjectives, createKeyResult } from '../api/workstation';
-import map from 'lodash/map';
-import { find } from 'lodash';
+import { getAllDepartments, getObjectives, createKeyResult } from '../api/apis';
+import { find, map } from 'lodash';
 
 // https://anujsingla.atlassian.net/plugins/servlet/ac/okrplugin_prod/post-install#!/okr-explorer?expandedItems=%5B%2275330-0%22,%2275332-1%22,%2275331-1%22,%2275333-1%22,%2275335-1%22,%2275336-1%22,%2275337-1%22,%2275334-1%22,%2275338-2%22,%2275342-3%22,%2275345-3%22,%2275346-3%22,%2275343-3%22,%2275339-2%22,%2275340-3%22,%2275344-3%22,%2275341-3%22,%220-0%22,%2275347-0%22%5D&assigneeIds=null&intervalId=9914&groupIds=null&gradeId=0&OKRTypeId=3
 

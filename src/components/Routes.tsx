@@ -15,22 +15,22 @@ export function Routes() {
         <Navbar.Collapse id="responsive-navbar-nav">
           <Nav className="mr-auto" as="ul">
             <Nav.Item as="li">
-              <NavLink to="/create-department" className="nav-link">
+              <NavLink to="/department" className="nav-link">
                 Create Department
               </NavLink>
             </Nav.Item>
             <Nav.Item as="li">
-              <NavLink to="/create-user" className="nav-link">
+              <NavLink to="/user" className="nav-link">
                 Create User
               </NavLink>
             </Nav.Item>
             <Nav.Item as="li">
-              <NavLink to="/create-objective" className="nav-link">
+              <NavLink to="/objective" className="nav-link">
                 Create Objective
               </NavLink>
             </Nav.Item>
             <Nav.Item as="li">
-              <NavLink to="/create-keyresult" className="nav-link">
+              <NavLink to="/keyresult" className="nav-link">
                 Create Key Result
               </NavLink>
             </Nav.Item>
