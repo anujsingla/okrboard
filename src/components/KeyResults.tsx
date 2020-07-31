@@ -1,135 +1,169 @@
-import React from 'react';
-import { Form, Button, Container, Row, Col } from 'react-bootstrap';
-import { Formik, FormikProps } from 'formik';
-import { object, string } from 'yup';
-import { ResultType } from './ResultType';
-import Select from 'react-select';
-import { ILabel } from '../models/shared';
-import { useQuery, useMutation } from 'react-query';
-import { getAllDepartments, getObjectives, createKeyResult } from '../api/apis';
-import { find, map } from 'lodash';
+import React, { useEffect, useState } from 'react';
+// import { useQuery, useMutation } from 'react-query';
+// import { getAllDepartments, getObjectives, createKeyResult } from '../api/apis';
+import { isEmpty } from 'lodash';
+import { Button, PageSection, PaginationVariant } from '@patternfly/react-core';
+import { IColumn, Table, PFTable, TablePagination } from '@rh-support/components';
+import { ModalType, noResultFoundRow } from '../components/Objectives';
+import { TrashIcon, PencilAltIcon } from '@patternfly/react-icons';
+import { useApplicationStateContext, useApplicationDispatchContext } from '../context/ApplicationContext';
+import { fetchAllFieldsValue } from '../reducers/ApplicationReducer';
+import { KeyResultsModal } from '../components/KeyResultsModal';
 
 // https://anujsingla.atlassian.net/plugins/servlet/ac/okrplugin_prod/post-install#!/okr-explorer?expandedItems=%5B%2275330-0%22,%2275332-1%22,%2275331-1%22,%2275333-1%22,%2275335-1%22,%2275336-1%22,%2275337-1%22,%2275334-1%22,%2275338-2%22,%2275342-3%22,%2275345-3%22,%2275346-3%22,%2275343-3%22,%2275339-2%22,%2275340-3%22,%2275344-3%22,%2275341-3%22,%220-0%22,%2275347-0%22%5D&assigneeIds=null&intervalId=9914&groupIds=null&gradeId=0&OKRTypeId=3
 
-interface ICreateWorkstation {
-  keyResultTitle: string;
-  resultType: string;
-  description: string;
-  workstationName: ILabel;
-  objectiveName: ILabel;
-}
-
-const formSchema = object({
-  keyResultTitle: string().required('Name is a required field'),
-  resultType: string(),
-  description: string().required('Description is a required field')
-});
-
-const initialValues: ICreateWorkstation = {
-  keyResultTitle: '',
-  resultType: '',
-  description: '',
-  workstationName: {
-    label: '',
-    value: '',
-    key: ''
-  },
-  objectiveName: {
-    label: '',
-    value: '',
-    key: ''
-  }
-};
-
 export function KeyResults() {
-  const workstation = useQuery('getAllDepartments', getAllDepartments);
-  const objective = useQuery('getAllObjective', getObjectives);
-  const [createKResult] = useMutation(createKeyResult, {});
+  // const workstation = useQuery('getAllDepartments', getAllDepartments);
+  // const objective = useQuery('getAllObjective', getObjectives);
+  // const [createKResult] = useMutation(createKeyResult, {});
+  const {
+    applicationState: { keyResults }
+  } = useApplicationStateContext();
+  const applicationDisptach = useApplicationDispatchContext();
+  const [currentPage, setCurrentPage] = useState<number>(0);
+  const [modalType, setModalType] = useState(ModalType.CREATE);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedKeyResultData, setSelectedKeyResultData] = useState(null);
 
-  const renderForms = (formikProps: FormikProps<ICreateWorkstation>) => {
-    const { setFieldValue, touched, errors, handleSubmit, handleChange, values } = formikProps;
-    const workstationOptions = map(workstation.data, d => ({ value: d.id, label: d.name }));
-    const objectiveOptions = map(objective.data, d => ({ value: d.id, label: d.title }));
+  useEffect(() => {
+    if (isEmpty(keyResults)) {
+      fetchAllFieldsValue(applicationDisptach);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  //   const submitKeyResult = (values: ICreateWorkstation, actions: any) => {
+  //     createKResult({
+  //       department: find(workstation.data, d => d.id === values.workstationName.value),
+  //       description: values.description,
+  //       objective: find(objective.data, d => d.id === values.objectiveName.value),
+  //       title: values.keyResultTitle,
+  //       owner: {
+  //         id: 2,
+  //         firstName: 'first name',
+  //         lastName: 'last name',
+  //         departments: [
+  //           {
+  //             id: 1,
+  //             name: 'dummy department',
+  //             children: []
+  //           }
+  //         ]
+  //       },
+  //       type: {
+  //         label: 'percentage',
+  //         type: 'percentage'
+  //       }
+  //     });
+  //   };
+  const columns: IColumn[] = [
+    {
+      title: 'Title',
+      id: 'objective_title',
+      sortable: true,
+      accessor: data => data.title
+    },
+    {
+      title: 'Description',
+      id: 'objective_description',
+      sortable: true,
+      accessor: data => data.description
+    },
+    {
+      title: 'Start Date',
+      id: 'objective_start_date',
+      accessor: data => data.startDate
+    },
+    {
+      title: 'End Date',
+      id: 'objective_end_date',
+      accessor: data => data.endDate
+    },
+    {
+      title: 'Status',
+      id: 'objective_status',
+      accessor: data => data.status
+    },
+    {
+      id: 'actions',
+      title: 'Actions',
+      cell: data => renderActionButtons(data)
+    }
+  ];
+  const renderActionButtons = data => {
     return (
-      <form noValidate onSubmit={handleSubmit}>
-        <Form.Group controlId="keyResultTitle">
-          <Form.Label>Department</Form.Label>
-          <Select
-            onChange={option => setFieldValue('workstationName', option)}
-            placeholder="select department"
-            name="workstationName"
-            value={values.workstationName}
-            options={workstationOptions}
-          />
-          <Form.Label>Objective</Form.Label>
-          <Select
-            onChange={option => setFieldValue('objectiveName', option)}
-            placeholder="select objective"
-            name="objectiveName"
-            value={values.objectiveName}
-            options={objectiveOptions}
-          />
-          <Form.Label>Key Result Title</Form.Label>
-          <Form.Control
-            onChange={handleChange}
-            name="keyResultTitle"
-            isInvalid={touched['keyResultTitle'] && !!errors['keyResultTitle']}
-            type="text"
-            placeholder="key Result title"
-            value={values['keyResultTitle']}
-          />
-          <Form.Control.Feedback type="invalid">{errors['keyResultTitle']}</Form.Control.Feedback>
-          <ResultType />
-          <Form.Control.Feedback type="invalid">{errors['resultType']}</Form.Control.Feedback>
-          <Form.Label>Description</Form.Label>
-          <Form.Control
-            onChange={handleChange}
-            name="description"
-            isInvalid={touched['description'] && !!errors['description']}
-            type="text"
-            placeholder="description"
-            value={values['description']}
-          />
-          <Form.Control.Feedback type="invalid">{errors['description']}</Form.Control.Feedback>
-        </Form.Group>
-        <Button type="submit">Create Key Result</Button>
-      </form>
+      <>
+        <Button className="p-r-0 p-l-0" variant="plain" aria-label="Action" onClick={event => onEditNotes(event, data)}>
+          <PencilAltIcon />
+        </Button>
+        <Button
+          className="p-r-0 p-l-2"
+          variant="plain"
+          aria-label="Action"
+          onClick={event => onDeleteNotes(event, data)}
+        >
+          <TrashIcon />
+        </Button>
+      </>
     );
   };
-  const submitKeyResult = (values: ICreateWorkstation, actions: any) => {
-    createKResult({
-      department: find(workstation.data, d => d.id === values.workstationName.value),
-      description: values.description,
-      objective: find(objective.data, d => d.id === values.objectiveName.value),
-      title: values.keyResultTitle,
-      owner: {
-        id: 2,
-        firstName: 'first name',
-        lastName: 'last name',
-        departments: [
-          {
-            id: 1,
-            name: 'dummy department',
-            children: []
-          }
-        ]
-      },
-      type: {
-        label: 'percentage',
-        type: 'percentage'
-      }
-    });
+  const onDeleteNotes = async (event, data) => {
+    // try {
+    //   await dObjective({ id: data.id });
+    // } catch (error) {}
+  };
+  const onEditNotes = async (event, data) => {
+    setIsModalOpen(true);
+    setModalType(ModalType.EDIT);
+    setSelectedKeyResultData(data);
+  };
+  const onCreateObjective = () => {
+    setIsModalOpen(true);
+  };
+  const onSetPage = ({ pageSize, currentPage }) => {
+    // setFilteredObjective(slice(objective, pageSize * (currentPage - 1), pageSize * currentPage));
+    setCurrentPage(currentPage);
+  };
+
+  const onPerPageSelect = ({ pageSize }) => {
+    // setFilteredObjective(slice(objective, 0, pageSize));
+    setCurrentPage(1);
   };
   return (
-    <Container className="mt-4">
-      <Row className="justify-content-md-center">
-        <Col md={8}>
-          <Formik validationSchema={formSchema} onSubmit={submitKeyResult} initialValues={initialValues}>
-            {formik => renderForms(formik)}
-          </Formik>
-        </Col>
-      </Row>
-    </Container>
+    <>
+      <PageSection>
+        <div className="pf-u-text-align-right">
+          <Button isSmall className="pf-u-mb-sm" variant="primary" onClick={onCreateObjective}>
+            Create Key Result
+          </Button>
+        </div>
+        <Table columns={columns} data={keyResults}>
+          <PFTable
+            aria-label="objective-table"
+            className="objective-table"
+            pagination={false}
+            emptyStateRow={noResultFoundRow}
+          />
+          {(keyResults || []).length > 10 && (
+            <footer>
+              <TablePagination
+                variant={PaginationVariant.bottom}
+                itemCount={(keyResults || []).length}
+                perPage={10}
+                currentPage={currentPage}
+                onSetPage={onSetPage}
+                onPerPageSelect={onPerPageSelect}
+              />
+            </footer>
+          )}
+        </Table>
+      </PageSection>
+      <KeyResultsModal
+        modalType={modalType}
+        keyResultData={selectedKeyResultData}
+        isModalOpen={isModalOpen}
+        onCloseModal={() => setIsModalOpen(false)}
+      />
+    </>
   );
 }

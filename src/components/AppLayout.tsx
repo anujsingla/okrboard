@@ -1,15 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import {
-  Nav,
-  NavList,
-  NavItem,
-  NavExpandable,
-  Page,
-  PageHeader,
-  PageSidebar,
-  SkipToContent
-} from '@patternfly/react-core';
+import { Nav, NavList, NavItem, NavExpandable, Page, PageHeader, PageSidebar } from '@patternfly/react-core';
 
 const routes: any = [
   {
@@ -91,14 +82,14 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
     </Nav>
   );
   const Sidebar = <PageSidebar theme="dark" nav={Navigation} isNavOpen={isMobileView ? isNavOpenMobile : isNavOpen} />;
-  const PageSkipToContent = <SkipToContent href="#primary-app-container">Skip to Content</SkipToContent>;
+  const pageId = 'main-content-primary-app-container';
   return (
     <Page
-      mainContainerId="primary-app-container"
+      mainContainerId={pageId}
       header={Header}
       sidebar={Sidebar}
       onPageResize={onPageResize}
-      skipToContent={PageSkipToContent}
+      //   skipToContent={PageSkipToContent}
     >
       {children}
     </Page>

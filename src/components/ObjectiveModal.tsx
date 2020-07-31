@@ -1,14 +1,15 @@
 import {
-    TextArea,
-    TextInput,
-    Button,
-    Modal,
-    ModalVariant,
-    Select,
-    SelectOption,
-    SelectVariant,
-    FormGroup,
-    Spinner
+  TextArea,
+  TextInput,
+  Button,
+  Modal,
+  ModalVariant,
+  Select,
+  SelectOption,
+  SelectVariant,
+  FormGroup,
+  Spinner,
+  Form
 } from '@patternfly/react-core';
 import React, { useState, useEffect } from 'react';
 import { find, map, isEmpty } from 'lodash';
@@ -23,284 +24,279 @@ import { useApplicationStateContext, useApplicationDispatchContext } from '../co
 import { fetchObjective } from '../reducers/ApplicationReducer';
 
 interface IProps {
-    isModalOpen: boolean;
-    onCloseModal: () => void;
-    modalType: ModalType;
-    objectiveData: any;
+  isModalOpen: boolean;
+  onCloseModal: () => void;
+  modalType: ModalType;
+  objectiveData: any;
 }
 
 export interface IFormData {
-    objectiveTitle?: string;
-    description?: string;
-    endDate?: string;
-    startDate?: string;
-    departmentName?: ILabel;
-    ownerName?: ILabel;
+  objectiveTitle?: string;
+  description?: string;
+  endDate?: string;
+  startDate?: string;
+  departmentName?: ILabel;
+  ownerName?: ILabel;
 }
 
 const formInitState: IFormData = {
-    objectiveTitle: '',
-    description: '',
-    endDate: moment().format('YYYY-MM-DD'),
-    startDate: moment().format('YYYY-MM-DD'),
-    departmentName: {
-        label: '',
-        value: ''
-    },
-    ownerName: {
-        label: '',
-        value: ''
-    }
+  objectiveTitle: '',
+  description: '',
+  endDate: moment().format('YYYY-MM-DD'),
+  startDate: moment().format('YYYY-MM-DD'),
+  departmentName: {
+    label: '',
+    value: ''
+  },
+  ownerName: {
+    label: '',
+    value: ''
+  }
 };
 
 export function ObjectiveModal(props: IProps) {
-    const { isModalOpen, onCloseModal, modalType, objectiveData } = props;
-    const [values, setValues] = useState(formInitState);
-    const [isSelectDepartmentOpen, setIsSelectDepartmentOpen] = useState(false);
-    const [isSelectUserOpen, setIsSelectUserOpen] = useState(false);
-    const [focusedInput, setFocusedInput] = useState<FocusedInputShape>(null);
-    const applicationDisptach = useApplicationDispatchContext();
-    const [sObjective, { isLoading }] = useMutation(createObjective, {
-        onError: () => {
-            addDangerMessage('Error in creating objective.');
-            fetchObjective(applicationDisptach);
-        },
-        onSuccess: () => {
-            addSuccessMessage('Successfully created Objective.');
-            fetchObjective(applicationDisptach);
-        }
+  const { isModalOpen, onCloseModal, modalType, objectiveData } = props;
+  const [values, setValues] = useState(formInitState);
+  const [isSelectDepartmentOpen, setIsSelectDepartmentOpen] = useState(false);
+  const [isSelectUserOpen, setIsSelectUserOpen] = useState(false);
+  const [focusedInput, setFocusedInput] = useState<FocusedInputShape>(null);
+  const applicationDisptach = useApplicationDispatchContext();
+  const [sObjective, { isLoading }] = useMutation(createObjective, {
+    onError: () => {
+      addDangerMessage('Error in creating objective.');
+      fetchObjective(applicationDisptach);
+    },
+    onSuccess: () => {
+      addSuccessMessage('Successfully created Objective.');
+      fetchObjective(applicationDisptach);
+    }
+  });
+  const [editObjectiveData] = useMutation(editObjective, {
+    onError: () => {
+      addDangerMessage('Error in editing objective.');
+      fetchObjective(applicationDisptach);
+    },
+    onSuccess: () => {
+      addSuccessMessage('Successfully edited Objective.');
+      fetchObjective(applicationDisptach);
+    }
+  });
+
+  const toggleSelectDepartment = isExpanded => setIsSelectDepartmentOpen(isExpanded);
+  const toggleSelectUser = isExpanded => setIsSelectUserOpen(isExpanded);
+
+  const {
+    applicationState: { department, users }
+  } = useApplicationStateContext();
+  const departmentOptions = map(department, d => ({ value: d.id, label: d.name }));
+  const usersOptions = map(users, d => ({
+    value: d.id,
+    label: `${d.firstName} ${d.lastName}`
+  }));
+
+  useEffect(() => {
+    if (modalType === ModalType.EDIT && !isEmpty(objectiveData)) {
+      const { title, startDate, endDate, description, owner, department } = objectiveData;
+      setValues({
+        ...values,
+        departmentName: find(departmentOptions, d => d.value === department.id),
+        ownerName: find(usersOptions, d => d.value === owner.id),
+        objectiveTitle: title,
+        startDate: startDate,
+        endDate: endDate,
+        description: description
+      });
+    } else {
+      setValues({ ...formInitState });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalType, objectiveData]);
+
+  const handleModalToggle = () => {
+    onCloseModal();
+  };
+  const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      if (modalType === ModalType.EDIT && !isEmpty(objectiveData)) {
+        const payload = {
+          department: find(department, d => d.id === values.departmentName.value),
+          owner: find(users, d => d.id === values.ownerName.value),
+          title: values.objectiveTitle,
+          startDate: values.startDate,
+          endDate: values.endDate,
+          description: values.description
+        };
+        await editObjectiveData({ payload, id: objectiveData.id });
+      } else {
+        await sObjective({
+          department: find(department, d => d.id === values.departmentName.value),
+          owner: find(users, d => d.id === values.ownerName.value),
+          title: values.objectiveTitle,
+          startDate: values.startDate,
+          endDate: values.endDate,
+          description: values.description
+        });
+      }
+      onCloseModal();
+    } catch (error) {
+      onCloseModal();
+    }
+  };
+  const onDepartmentChange = (event, selection) => {
+    setValues({
+      ...values,
+      departmentName: find(departmentOptions, d => d.value === selection)
     });
-    const [editObjectiveData] = useMutation(editObjective, {
-        onError: () => {
-            addDangerMessage('Error in editing objective.');
-            fetchObjective(applicationDisptach);
-        },
-        onSuccess: () => {
-            addSuccessMessage('Successfully edited Objective.');
-            fetchObjective(applicationDisptach);
-        }
+    toggleSelectDepartment(false);
+  };
+  const onClearDepartment = () => {
+    setValues({
+      ...values,
+      departmentName: {
+        label: '',
+        value: ''
+      }
     });
-
-    const toggleSelectDepartment = isExpanded => setIsSelectDepartmentOpen(isExpanded);
-    const toggleSelectUser = isExpanded => setIsSelectUserOpen(isExpanded);
-
-    const {
-        applicationState: { department, users }
-    } = useApplicationStateContext();
-    const departmentOptions = map(department, d => ({ value: d.id, label: d.name }));
-    const usersOptions = map(users, d => ({
-        value: d.id,
-        label: `${d.firstName} ${d.lastName}`
-    }));
-
-    useEffect(() => {
-        if (modalType === ModalType.EDIT && !isEmpty(objectiveData)) {
-            const { title, startDate, endDate, description, owner, department } = objectiveData;
-            setValues({
-                ...values,
-                departmentName: find(departmentOptions, d => d.value === department.id),
-                ownerName: find(usersOptions, d => d.value === owner.id),
-                objectiveTitle: title,
-                startDate: startDate,
-                endDate: endDate,
-                description: description
-            });
-        } else {
-            setValues({ ...formInitState });
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [modalType, objectiveData]);
-
-    const handleModalToggle = () => {
-        onCloseModal();
-    };
-    const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        try {
-            if (modalType === ModalType.EDIT && !isEmpty(objectiveData)) {
-                const payload = {
-                    department: find(department, d => d.id === values.departmentName.value),
-                    owner: find(users, d => d.id === values.ownerName.value),
-                    title: values.objectiveTitle,
-                    startDate: values.startDate,
-                    endDate: values.endDate,
-                    description: values.description
-                };
-                await editObjectiveData({ payload, id: objectiveData.id });
-            } else {
-                await sObjective({
-                    department: find(department, d => d.id === values.departmentName.value),
-                    owner: find(users, d => d.id === values.ownerName.value),
-                    title: values.objectiveTitle,
-                    startDate: values.startDate,
-                    endDate: values.endDate,
-                    description: values.description
-                });
-            }
-            onCloseModal();
-        } catch (error) {
-            onCloseModal();
-        }
-    };
-    const onDepartmentChange = (event, selection) => {
-        setValues({
-            ...values,
-            departmentName: find(departmentOptions, d => d.value === selection)
-        });
-        toggleSelectDepartment(false);
-    };
-    const onClearDepartment = () => {
-        setValues({
-            ...values,
-            departmentName: {
-                label: '',
-                value: ''
-            }
-        });
-        toggleSelectDepartment(false);
-    };
-    const onUserChange = (event, selection) => {
-        console.log('onUserChange', selection);
-        setValues({
-            ...values,
-            ownerName: find(usersOptions, d => d.value === selection)
-        });
-        toggleSelectUser(false);
-    };
-    const onClearUser = () => {
-        setValues({
-            ...values,
-            ownerName: {
-                label: '',
-                value: ''
-            }
-        });
-        toggleSelectUser(false);
-    };
-    const onTitleChange = value => {
-        setValues({
-            ...values,
-            objectiveTitle: value || ''
-        });
-    };
-    const onDescriptionChange = value => {
-        setValues({
-            ...values,
-            description: value || ''
-        });
-    };
-    const onDatesChange = ({ startDate, endDate }) => {
-        if (endDate && endDate.isSameOrAfter(startDate)) {
-            setValues({
-                ...values,
-                startDate: moment(startDate).format('YYYY-MM-DD') || '',
-                endDate: moment(endDate).format('YYYY-MM-DD') || ''
-            });
-        }
-    };
-    return (
-        <Modal
-            className="objective-modal"
-            title="Create Objective"
-            isOpen={isModalOpen}
-            variant={ModalVariant.small}
-            onClose={handleModalToggle}
-            actions={[
-                <>
-                    {!isLoading && (
-                        <>
-                            <Button
-                                isDisabled={isLoading}
-                                key="confirm"
-                                variant="primary"
-                                onClick={handleSubmit}
-                                disabled={false}
-                            >
-                                Submit
-                            </Button>
-                            <Button isDisabled={isLoading} key="cancel" variant="link" onClick={handleModalToggle}>
-                                Cancel
-                            </Button>
-                        </>
-                    )}
-                    {isLoading && <Spinner size="lg" />}
-                </>
-            ]}
-        >
-            <form action="" onSubmit={handleSubmit}>
-                <FormGroup label="Department" fieldId={'Department'} isRequired>
-                    <Select
-                        id="department" //Needs to be unique, but I don't have time
-                        variant={SelectVariant.typeahead}
-                        isOpen={isSelectDepartmentOpen}
-                        onToggle={toggleSelectDepartment}
-                        onSelect={onDepartmentChange}
-                        menuAppendTo="parent"
-                        onClear={onClearDepartment}
-                        selections={values.departmentName && values.departmentName.label}
-                    >
-                        {(departmentOptions || []).map((value, index) => (
-                            <SelectOption
-                                isSelected={value.value === values.departmentName.value}
-                                key={`${value.value}-${index}`}
-                                value={value.value}
-                            >
-                                {value.label}
-                            </SelectOption>
-                        ))}
-                    </Select>
-                </FormGroup>
-                <FormGroup label="Owner" fieldId={'Owner'} isRequired>
-                    <Select
-                        id="owner" //Needs to be unique, but I don't have time
-                        variant={SelectVariant.typeahead}
-                        isOpen={isSelectUserOpen}
-                        onToggle={toggleSelectUser}
-                        onSelect={onUserChange}
-                        menuAppendTo="parent"
-                        onClear={onClearUser}
-                        selections={values.ownerName && values.ownerName.label}
-                    >
-                        {(usersOptions || []).map((value, index) => (
-                            <SelectOption key={`${value.value}-${index}`} value={value.value}>
-                                {value.label}
-                            </SelectOption>
-                        ))}
-                    </Select>
-                </FormGroup>
-                <FormGroup label="Title" fieldId={'Title'} isRequired>
-                    <TextInput
-                        isRequired
-                        type="text"
-                        id="objective_title"
-                        name="objective_title"
-                        value={values.objectiveTitle}
-                        onChange={onTitleChange}
-                    />
-                </FormGroup>
-                <FormGroup label="Description" fieldId={'Description'} isRequired>
-                    <TextArea
-                        value={values.description}
-                        onChange={onDescriptionChange}
-                        name="objective_description"
-                        id="objective_description"
-                    />
-                </FormGroup>
-                <FormGroup label="Date" fieldId={'Date'} isRequired>
-                    <DateRangePicker
-                        onDatesChange={onDatesChange}
-                        startDate={moment(values.startDate)}
-                        endDate={moment(values.endDate)}
-                        onFocusChange={change => setFocusedInput(change)}
-                        focusedInput={focusedInput}
-                        startDateId={'start_date'}
-                        startDatePlaceholderText="Start Date"
-                        endDateId={'end_date'}
-                        endDatePlaceholderText="End Date"
-                        isOutsideRange={() => false}
-                    />
-                </FormGroup>
-            </form>
-        </Modal>
-    );
+    toggleSelectDepartment(false);
+  };
+  const onUserChange = (event, selection) => {
+    console.log('onUserChange', selection);
+    setValues({
+      ...values,
+      ownerName: find(usersOptions, d => d.value === selection)
+    });
+    toggleSelectUser(false);
+  };
+  const onClearUser = () => {
+    setValues({
+      ...values,
+      ownerName: {
+        label: '',
+        value: ''
+      }
+    });
+    toggleSelectUser(false);
+  };
+  const onTitleChange = value => {
+    setValues({
+      ...values,
+      objectiveTitle: value || ''
+    });
+  };
+  const onDescriptionChange = value => {
+    setValues({
+      ...values,
+      description: value || ''
+    });
+  };
+  const onDatesChange = ({ startDate, endDate }) => {
+    if (endDate && endDate.isSameOrAfter(startDate)) {
+      setValues({
+        ...values,
+        startDate: moment(startDate).format('YYYY-MM-DD') || '',
+        endDate: moment(endDate).format('YYYY-MM-DD') || ''
+      });
+    }
+  };
+  return (
+    <Modal
+      className="objective-modal"
+      title="Create Objective"
+      isOpen={isModalOpen}
+      variant={ModalVariant.small}
+      onClose={handleModalToggle}
+      actions={[
+        <>
+          {!isLoading && (
+            <>
+              <Button isDisabled={isLoading} key="confirm" variant="primary" onClick={handleSubmit} disabled={false}>
+                Submit
+              </Button>
+              <Button isDisabled={isLoading} key="cancel" variant="link" onClick={handleModalToggle}>
+                Cancel
+              </Button>
+            </>
+          )}
+          {isLoading && <Spinner size="lg" />}
+        </>
+      ]}
+    >
+      <Form action="" onSubmit={handleSubmit}>
+        <FormGroup label="Department" fieldId={'Department'} isRequired>
+          <Select
+            id="department" //Needs to be unique, but I don't have time
+            variant={SelectVariant.typeahead}
+            isOpen={isSelectDepartmentOpen}
+            onToggle={toggleSelectDepartment}
+            onSelect={onDepartmentChange}
+            menuAppendTo="parent"
+            onClear={onClearDepartment}
+            selections={values.departmentName && values.departmentName.label}
+          >
+            {(departmentOptions || []).map((value, index) => (
+              <SelectOption
+                isSelected={value.value === values.departmentName.value}
+                key={`${value.value}-${index}`}
+                value={value.value}
+              >
+                {value.label}
+              </SelectOption>
+            ))}
+          </Select>
+        </FormGroup>
+        <FormGroup label="Owner" fieldId={'Owner'} isRequired>
+          <Select
+            id="owner" //Needs to be unique, but I don't have time
+            variant={SelectVariant.typeahead}
+            isOpen={isSelectUserOpen}
+            onToggle={toggleSelectUser}
+            onSelect={onUserChange}
+            menuAppendTo="parent"
+            onClear={onClearUser}
+            selections={values.ownerName && values.ownerName.label}
+          >
+            {(usersOptions || []).map((value, index) => (
+              <SelectOption key={`${value.value}-${index}`} value={value.value}>
+                {value.label}
+              </SelectOption>
+            ))}
+          </Select>
+        </FormGroup>
+        <FormGroup label="Title" fieldId={'Title'} isRequired>
+          <TextInput
+            isRequired
+            type="text"
+            id="objective_title"
+            name="objective_title"
+            value={values.objectiveTitle}
+            onChange={onTitleChange}
+          />
+        </FormGroup>
+        <FormGroup label="Description" fieldId={'Description'} isRequired>
+          <TextArea
+            value={values.description}
+            onChange={onDescriptionChange}
+            name="objective_description"
+            id="objective_description"
+          />
+        </FormGroup>
+        <FormGroup label="Date" fieldId={'Date'} isRequired>
+          <DateRangePicker
+            onDatesChange={onDatesChange}
+            startDate={moment(values.startDate)}
+            endDate={moment(values.endDate)}
+            onFocusChange={change => setFocusedInput(change)}
+            focusedInput={focusedInput}
+            startDateId={'start_date'}
+            startDatePlaceholderText="Start Date"
+            endDateId={'end_date'}
+            endDatePlaceholderText="End Date"
+            isOutsideRange={() => false}
+            openDirection="up"
+          />
+        </FormGroup>
+      </Form>
+    </Modal>
+  );
 }

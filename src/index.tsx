@@ -8,6 +8,7 @@ import 'noty/lib/noty.css';
 import 'noty/lib/themes/bootstrap-v4.css';
 import 'react-dates/initialize';
 import 'react-dates/lib/css/_datepicker.css';
+// import 'bootstrap/dist/css/bootstrap.min.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { HashRouter, Route } from 'react-router-dom';
