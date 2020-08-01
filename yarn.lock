@@ -1761,6 +1761,13 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
+"@babel/runtime@^7.10.5":
+  version "7.11.0"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.11.0.tgz#f10245877042a815e07f7e693faff0ae9d3a2aac"
+  integrity sha512-qArkXsjJq7H+T86WrIFV0Fnu/tNOkZ4cgXmjkzAu3b/58D5mFIO8JH/y77t7C9q0OdDRdh9s7Ue5GasYssxtXw==
+  dependencies:
+    regenerator-runtime "^0.13.4"
+
 "@babel/runtime@^7.4.4":
   version "7.10.4"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.10.4.tgz#a6724f1a6b8d2f6ea5236dbfe58c7d7ea9c5eb99"
@@ -3399,6 +3406,14 @@
   integrity sha512-/fHr+BoUX+3MYpCkb8a+Bpt+Je2/0FgFi1XSaHH0ga1hqMy5PS7Ny/XV0Qh5cJHeKvkONbKWPSwgPlqK7UtdqA==
   dependencies:
     "@types/react" "*"
+
+"@types/react-query@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@types/react-query/-/react-query-1.1.2.tgz#3d7f3c9457116d05ba4eabb9e7f882b6d496436c"
+  integrity sha512-/IuQs37kmUg7C417Rotu+uf/3LghR3Qv6RGHO2YU1P+wFx167Hy3WJ3r9Si0jOyJVTDtjF2Lt0xSeq+kJwokKw==
+  dependencies:
+    "@types/react" "*"
+    ts-toolbelt "*"
 
 "@types/react-router-dom@^5.1.5":
   version "5.1.5"
@@ -10847,6 +10862,14 @@ marked@^0.7.0:
   resolved "https://registry.yarnpkg.com/marked/-/marked-0.7.0.tgz#b64201f051d271b1edc10a04d1ae9b74bb8e5c0e"
   integrity sha512-c+yYdCZJQrsRjTPhUx7VKkApw9bwDkNbHUKo1ovgcfDjb2kc8rLuRbIFyXL5WOEUwzSSKo3IXpph2K6DqB/KZg==
 
+match-sorter@^4.1.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/match-sorter/-/match-sorter-4.2.0.tgz#70c4e7443dacf5fa2503bc5afc189024092e9d27"
+  integrity sha512-oEvLn8R+a30YZ9l5XdCTkYQuLsOs8frxEqQTAuxoqkQx/qV5pQpx/NqAWvJ5xbYecqfXoF/ZevaIS1+NkbRymg==
+  dependencies:
+    "@babel/runtime" "^7.10.5"
+    remove-accents "0.4.2"
+
 material-colors@^1.2.1:
   version "1.2.6"
   resolved "https://registry.yarnpkg.com/material-colors/-/material-colors-1.2.6.tgz#6d1958871126992ceecc72f4bcc4d8f010865f46"
@@ -13894,6 +13917,13 @@ react-portal@^4.2.0:
   dependencies:
     prop-types "^15.5.8"
 
+react-query-devtools@^2.4.2:
+  version "2.4.2"
+  resolved "https://registry.yarnpkg.com/react-query-devtools/-/react-query-devtools-2.4.2.tgz#64077b1f31c0b390b764fbabf0ba9c33ff549d1b"
+  integrity sha512-dJQWgGLnzwD+xC1vn62YmSifI/Ns1qv8RAJNESfF5fIqe3NVxt1a78b5N8aJJi8tBAB/g0qDvtxZFl4SEVS4XQ==
+  dependencies:
+    match-sorter "^4.1.0"
+
 react-query@^2.4.13:
   version "2.4.13"
   resolved "https://registry.yarnpkg.com/react-query/-/react-query-2.4.13.tgz#478f4f32a8c6b56de0e7bb6eb3cd2baa812e1ebb"
@@ -14490,6 +14520,11 @@ remark-squeeze-paragraphs@4.0.0:
   integrity sha512-8qRqmL9F4nuLPIgl92XUuxI3pFxize+F1H0e/W3llTk0UsjJaj01+RrirkMw7P21RKe4X6goQhYRSvNWX+70Rw==
   dependencies:
     mdast-squeeze-paragraphs "^4.0.0"
+
+remove-accents@0.4.2:
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/remove-accents/-/remove-accents-0.4.2.tgz#0a43d3aaae1e80db919e07ae254b285d9e1c7bb5"
+  integrity sha1-CkPTqq4egNuRngeuJUsoXZ4ce7U=
 
 remove-trailing-separator@^1.0.1:
   version "1.1.0"
@@ -16215,6 +16250,11 @@ ts-pnp@^1.1.2:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/ts-pnp/-/ts-pnp-1.2.0.tgz#a500ad084b0798f1c3071af391e65912c86bca92"
   integrity sha512-csd+vJOb/gkzvcCHgTGSChYpy5f1/XKNsmvBGO4JXS+z1v2HobugDz4s1IeFXM3wZB44uczs+eazB5Q/ccdhQw==
+
+ts-toolbelt@*:
+  version "6.13.37"
+  resolved "https://registry.yarnpkg.com/ts-toolbelt/-/ts-toolbelt-6.13.37.tgz#3bf7993c973b02371a598348c586e599faea4fe6"
+  integrity sha512-K8P25O7Fx+zHuSBJNQkdwg1OYRA/zerWNltt1EXLoPHQ8kP5ADhJREQgZzi+ka+rHtx0/i/4AdWHJi5V1fdEow==
 
 ts-toolbelt@^6.9.4:
   version "6.9.9"

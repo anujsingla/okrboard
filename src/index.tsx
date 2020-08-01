@@ -13,12 +13,14 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { HashRouter, Route } from 'react-router-dom';
 import { AppLayout } from './components/AppLayout';
+import { ReactQueryDevtools } from 'react-query-devtools';
 
 ReactDOM.render(
   <HashRouter>
     <AppLayout>
       <Route exact={false} path="/" component={App} />
     </AppLayout>
+    <ReactQueryDevtools />
   </HashRouter>,
   document.getElementById('root')
 );

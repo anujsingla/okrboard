@@ -16,12 +16,11 @@ import { find, map, isEmpty } from 'lodash';
 import { ILabel } from '../models/shared';
 import { DateRangePicker, FocusedInputShape } from 'react-dates';
 import moment from 'moment-timezone';
-import { useMutation } from 'react-query';
-import { createObjective, editObjective } from '../api/apis';
+import { useMutation, queryCache, useQuery } from 'react-query';
+import { createObjective, editObjective, getAllDepartments, getUsers } from '../api/apis';
 import { addSuccessMessage, addDangerMessage } from '../utils/alertUtil';
 import { ModalType } from './Objectives';
-import { useApplicationStateContext, useApplicationDispatchContext } from '../context/ApplicationContext';
-import { fetchObjective } from '../reducers/ApplicationReducer';
+import { ReactQueryConstant } from '../models/reactQueryConst';
 
 interface IProps {
   isModalOpen: boolean;
@@ -60,36 +59,42 @@ export function ObjectiveModal(props: IProps) {
   const [isSelectDepartmentOpen, setIsSelectDepartmentOpen] = useState(false);
   const [isSelectUserOpen, setIsSelectUserOpen] = useState(false);
   const [focusedInput, setFocusedInput] = useState<FocusedInputShape>(null);
-  const applicationDisptach = useApplicationDispatchContext();
-  const [sObjective, { isLoading }] = useMutation(createObjective, {
+  const [sObjective, saveObjectiveInfo] = useMutation(createObjective, {
     onError: () => {
       addDangerMessage('Error in creating objective.');
-      fetchObjective(applicationDisptach);
     },
     onSuccess: () => {
       addSuccessMessage('Successfully created Objective.');
-      fetchObjective(applicationDisptach);
+    },
+    onSettled: (data, error) => {
+      queryCache.invalidateQueries(ReactQueryConstant.OBJECTIVES);
     }
   });
-  const [editObjectiveData] = useMutation(editObjective, {
+  const [editObjectiveData, editObjectiveInfo] = useMutation(editObjective, {
     onError: () => {
       addDangerMessage('Error in editing objective.');
-      fetchObjective(applicationDisptach);
     },
     onSuccess: () => {
       addSuccessMessage('Successfully edited Objective.');
-      fetchObjective(applicationDisptach);
+    },
+    onSettled: (data, error) => {
+      queryCache.invalidateQueries(ReactQueryConstant.OBJECTIVES);
     }
+  });
+
+  const departmentsData = useQuery(ReactQueryConstant.DEPARTMENTS, getAllDepartments, {
+    staleTime: Infinity
+  });
+
+  const usersData = useQuery(ReactQueryConstant.USERS, getUsers, {
+    staleTime: Infinity
   });
 
   const toggleSelectDepartment = isExpanded => setIsSelectDepartmentOpen(isExpanded);
   const toggleSelectUser = isExpanded => setIsSelectUserOpen(isExpanded);
 
-  const {
-    applicationState: { department, users }
-  } = useApplicationStateContext();
-  const departmentOptions = map(department, d => ({ value: d.id, label: d.name }));
-  const usersOptions = map(users, d => ({
+  const departmentOptions = map(departmentsData.data, d => ({ value: d.id, label: d.name }));
+  const usersOptions = map(usersData.data, d => ({
     value: d.id,
     label: `${d.firstName} ${d.lastName}`
   }));
@@ -120,8 +125,8 @@ export function ObjectiveModal(props: IProps) {
     try {
       if (modalType === ModalType.EDIT && !isEmpty(objectiveData)) {
         const payload = {
-          department: find(department, d => d.id === values.departmentName.value),
-          owner: find(users, d => d.id === values.ownerName.value),
+          department: find(departmentsData.data, d => d.id === values.departmentName.value),
+          owner: find(usersData.data, d => d.id === values.ownerName.value),
           title: values.objectiveTitle,
           startDate: values.startDate,
           endDate: values.endDate,
@@ -130,8 +135,8 @@ export function ObjectiveModal(props: IProps) {
         await editObjectiveData({ payload, id: objectiveData.id });
       } else {
         await sObjective({
-          department: find(department, d => d.id === values.departmentName.value),
-          owner: find(users, d => d.id === values.ownerName.value),
+          department: find(departmentsData.data, d => d.id === values.departmentName.value),
+          owner: find(usersData.data, d => d.id === values.ownerName.value),
           title: values.objectiveTitle,
           startDate: values.startDate,
           endDate: values.endDate,
@@ -208,17 +213,23 @@ export function ObjectiveModal(props: IProps) {
       onClose={handleModalToggle}
       actions={[
         <>
-          {!isLoading && (
+          {!(saveObjectiveInfo.isLoading || editObjectiveInfo.isLoading) && (
             <>
-              <Button isDisabled={isLoading} key="confirm" variant="primary" onClick={handleSubmit} disabled={false}>
+              <Button
+                isDisabled={saveObjectiveInfo.isLoading}
+                key="confirm"
+                variant="primary"
+                onClick={handleSubmit}
+                disabled={false}
+              >
                 Submit
               </Button>
-              <Button isDisabled={isLoading} key="cancel" variant="link" onClick={handleModalToggle}>
+              <Button isDisabled={saveObjectiveInfo.isLoading} key="cancel" variant="link" onClick={handleModalToggle}>
                 Cancel
               </Button>
             </>
           )}
-          {isLoading && <Spinner size="lg" />}
+          {(saveObjectiveInfo.isLoading || editObjectiveInfo.isLoading) && <Spinner size="lg" />}
         </>
       ]}
     >

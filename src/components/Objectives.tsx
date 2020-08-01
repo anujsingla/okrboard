@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import 'react-datepicker/dist/react-datepicker.css';
 import {
   Button,
   EmptyState,
@@ -12,14 +11,13 @@ import {
 } from '@patternfly/react-core';
 import { SearchIcon } from '@patternfly/react-icons';
 import { IColumn, Table, PFTable, TablePagination } from '@rh-support/components';
-import { useApplicationStateContext, useApplicationDispatchContext } from '../context/ApplicationContext';
-import { fetchAllFieldsValue, fetchObjective } from '../reducers/ApplicationReducer';
 import { ObjectiveModal } from '../components/ObjectiveModal';
 import { TrashIcon, PencilAltIcon } from '@patternfly/react-icons';
-import { useMutation } from 'react-query';
-import { deleteObjective } from '../api/apis';
+import { useMutation, useQuery, queryCache } from 'react-query';
+import { deleteObjective, getObjectives } from '../api/apis';
 import { addSuccessMessage, addDangerMessage } from '../utils/alertUtil';
 import { slice, isEmpty } from 'lodash';
+import { ReactQueryConstant } from '../models/reactQueryConst';
 
 export const noResultFoundRow = [
   {
@@ -50,19 +48,19 @@ export enum ModalType {
 }
 
 export function Objective() {
-  const {
-    applicationState: { objective }
-  } = useApplicationStateContext();
+  const objectiveData = useQuery(ReactQueryConstant.OBJECTIVES, getObjectives, {
+    staleTime: Infinity
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const applicationDisptach = useApplicationDispatchContext();
   const [dObjective] = useMutation(deleteObjective, {
     onError: () => {
       addDangerMessage('Error in deleting objective.');
-      fetchObjective(applicationDisptach);
     },
     onSuccess: () => {
       addSuccessMessage('Successfully Deleted Objective.');
-      fetchObjective(applicationDisptach);
+    },
+    onSettled: (data, error) => {
+      queryCache.invalidateQueries(ReactQueryConstant.OBJECTIVES);
     }
   });
   const [modalType, setModalType] = useState(ModalType.CREATE);
@@ -71,16 +69,11 @@ export function Objective() {
   const [filteredObjective, setFilteredObjective] = React.useState([]);
 
   useEffect(() => {
-    if (isEmpty(objective)) {
-      fetchAllFieldsValue(applicationDisptach);
+    if (!isEmpty(objectiveData.data)) {
+      setFilteredObjective(slice(objectiveData.data, 0, 10));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  useEffect(() => {
-    if (!isEmpty(objective)) {
-      setFilteredObjective(slice(objective, 0, 10));
-    }
-  }, [objective]);
+  }, [objectiveData.data]);
   const onCreateObjective = () => {
     setIsModalOpen(true);
   };
@@ -146,12 +139,12 @@ export function Objective() {
     }
   ];
   const onSetPage = ({ pageSize, currentPage }) => {
-    setFilteredObjective(slice(objective, pageSize * (currentPage - 1), pageSize * currentPage));
+    setFilteredObjective(slice(objectiveData.data, pageSize * (currentPage - 1), pageSize * currentPage));
     setCurrentPage(currentPage);
   };
 
   const onPerPageSelect = ({ pageSize }) => {
-    setFilteredObjective(slice(objective, 0, pageSize));
+    setFilteredObjective(slice(objectiveData.data, 0, pageSize));
     setCurrentPage(1);
   };
 
@@ -171,11 +164,11 @@ export function Objective() {
             pagination={false}
             emptyStateRow={noResultFoundRow}
           />
-          {(objective || []).length > 10 && (
+          {(objectiveData.data || []).length > 10 && (
             <footer>
               <TablePagination
                 variant={PaginationVariant.bottom}
-                itemCount={(objective || []).length}
+                itemCount={(objectiveData.data || []).length}
                 perPage={10}
                 currentPage={currentPage}
                 onSetPage={onSetPage}

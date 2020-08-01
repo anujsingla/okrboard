@@ -25,12 +25,11 @@ import {
 import React, { useState, useEffect } from 'react';
 import { find, map, isEmpty } from 'lodash';
 import { ILabel } from '../models/shared';
-import { useMutation } from 'react-query';
-import { createObjective, editObjective } from '../api/apis';
+import { useMutation, useQuery, queryCache } from 'react-query';
+import { createKeyResult, editKeyResult, getAllDepartments, getUsers, getObjectives } from '../api/apis';
 import { addSuccessMessage, addDangerMessage } from '../utils/alertUtil';
 import { ModalType } from './Objectives';
-import { useApplicationStateContext, useApplicationDispatchContext } from '../context/ApplicationContext';
-import { fetchObjective } from '../reducers/ApplicationReducer';
+import { ReactQueryConstant } from '../models/reactQueryConst';
 
 interface IProps {
   isModalOpen: boolean;
@@ -86,26 +85,39 @@ export function KeyResultsModal(props: IProps) {
   const [resultType, setResultType] = useState(ResultTypes.PERCENTAGE);
   const [binaryButtonType, setBinaryButtonType] = useState(BinaryButtonType.IN_PROGRESS);
 
-  const applicationDisptach = useApplicationDispatchContext();
-  const [sObjective, { isLoading }] = useMutation(createObjective, {
+  const [cKeyResult, { isLoading }] = useMutation(createKeyResult, {
     onError: () => {
       addDangerMessage('Error in creating Key Result.');
-      fetchObjective(applicationDisptach);
     },
     onSuccess: () => {
       addSuccessMessage('Successfully created Key Result.');
-      fetchObjective(applicationDisptach);
+    },
+    onSettled: (data, error) => {
+      queryCache.invalidateQueries(ReactQueryConstant.KEY_RESULTS);
     }
   });
-  const [editObjectiveData] = useMutation(editObjective, {
+  const [editKeyResultData] = useMutation(editKeyResult, {
     onError: () => {
       addDangerMessage('Error in editing Key Result.');
-      fetchObjective(applicationDisptach);
     },
     onSuccess: () => {
       addSuccessMessage('Successfully edited Key Result.');
-      fetchObjective(applicationDisptach);
+    },
+    onSettled: (data, error) => {
+      queryCache.invalidateQueries(ReactQueryConstant.KEY_RESULTS);
     }
+  });
+
+  const departmentsData = useQuery(ReactQueryConstant.DEPARTMENTS, getAllDepartments, {
+    staleTime: Infinity
+  });
+
+  const usersData = useQuery(ReactQueryConstant.USERS, getUsers, {
+    staleTime: Infinity
+  });
+
+  const objectiveData = useQuery(ReactQueryConstant.OBJECTIVES, getObjectives, {
+    staleTime: Infinity
   });
 
   const toggleSelectDepartment = isExpanded => setIsSelectDepartmentOpen(isExpanded);
@@ -114,13 +126,10 @@ export function KeyResultsModal(props: IProps) {
   const onResultTypeChange = (val: any) => setResultType(val);
   const onBinaryButtonChange = (val: any) => setBinaryButtonType(val);
 
-  const {
-    applicationState: { department, users, objective }
-  } = useApplicationStateContext();
-  const departmentOptions = map(department, d => ({ value: d.id, label: d.name }));
-  const objectiveOptions = map(objective, d => ({ value: d.id, label: d.name }));
+  const departmentOptions = map(departmentsData.data, d => ({ value: d.id, label: d.name }));
+  const objectiveOptions = map(objectiveData.data, d => ({ value: d.id, label: d.name }));
 
-  const usersOptions = map(users, d => ({
+  const usersOptions = map(usersData.data, d => ({
     value: d.id,
     label: `${d.firstName} ${d.lastName}`
   }));
@@ -149,16 +158,16 @@ export function KeyResultsModal(props: IProps) {
     try {
       if (modalType === ModalType.EDIT && !isEmpty(keyResultData)) {
         const payload = {
-          department: find(department, d => d.id === values.departmentName.value),
-          owner: find(users, d => d.id === values.ownerName.value),
+          department: find(departmentsData.data, d => d.id === values.departmentName.value),
+          owner: find(usersData.data, d => d.id === values.ownerName.value),
           title: values.keyResultTitle,
           description: values.description
         };
-        await editObjectiveData({ payload, id: keyResultData.id });
+        await editKeyResultData({ payload, id: keyResultData.id });
       } else {
-        await sObjective({
-          department: find(department, d => d.id === values.departmentName.value),
-          owner: find(users, d => d.id === values.ownerName.value),
+        await cKeyResult({
+          department: find(departmentsData.data, d => d.id === values.departmentName.value),
+          owner: find(usersData.data, d => d.id === values.ownerName.value),
           title: values.keyResultTitle,
           description: values.description
         });
