@@ -10,20 +10,13 @@ import {
   FormGroup,
   Spinner,
   Form,
-  Toolbar,
-  ToolbarContent,
-  ToolbarGroup,
-  ToolbarItem,
-  Flex,
-  FlexItem,
-  ButtonVariant,
   InputGroupText,
   InputGroup,
   Grid,
   GridItem
 } from '@patternfly/react-core';
 import React, { useState, useEffect } from 'react';
-import { find, map, isEmpty } from 'lodash';
+import { find, map, isEmpty, filter } from 'lodash';
 import { ILabel } from '../models/shared';
 import { useMutation, useQuery, queryCache } from 'react-query';
 import { createKeyResult, editKeyResult, getAllDepartments, getUsers, getObjectives } from '../api/apis';
@@ -45,6 +38,8 @@ export interface IFormData {
   keyResultTitle?: string;
   resultType?: string;
   description?: string;
+  currentState?: number;
+  targetState?: number;
 }
 
 const formInitState: IFormData = {
@@ -62,18 +57,9 @@ const formInitState: IFormData = {
   objectiveName: {
     label: '',
     value: ''
-  }
-};
-
-const ResultTypes = {
-  PERCENTAGE: 'percentage',
-  BINARY: 'binary',
-  NUMBER: 'number'
-};
-
-const BinaryButtonType = {
-  IN_PROGRESS: 'in progress',
-  DONE: 'done'
+  },
+  currentState: 0,
+  targetState: 100
 };
 
 export function KeyResultsModal(props: IProps) {
@@ -82,8 +68,6 @@ export function KeyResultsModal(props: IProps) {
   const [isSelectDepartmentOpen, setIsSelectDepartmentOpen] = useState(false);
   const [isSelectUserOpen, setIsSelectUserOpen] = useState(false);
   const [isSelectObjectiveOpen, setIsSelectObjectiveOpen] = useState(false);
-  const [resultType, setResultType] = useState(ResultTypes.PERCENTAGE);
-  const [binaryButtonType, setBinaryButtonType] = useState(BinaryButtonType.IN_PROGRESS);
 
   const [cKeyResult, { isLoading }] = useMutation(createKeyResult, {
     onError: () => {
@@ -94,6 +78,7 @@ export function KeyResultsModal(props: IProps) {
     },
     onSettled: (data, error) => {
       queryCache.invalidateQueries(ReactQueryConstant.KEY_RESULTS);
+      queryCache.invalidateQueries(ReactQueryConstant.OBJECTIVES);
     }
   });
   const [editKeyResultData] = useMutation(editKeyResult, {
@@ -105,6 +90,7 @@ export function KeyResultsModal(props: IProps) {
     },
     onSettled: (data, error) => {
       queryCache.invalidateQueries(ReactQueryConstant.KEY_RESULTS);
+      queryCache.invalidateQueries(ReactQueryConstant.OBJECTIVES);
     }
   });
 
@@ -123,12 +109,11 @@ export function KeyResultsModal(props: IProps) {
   const toggleSelectDepartment = isExpanded => setIsSelectDepartmentOpen(isExpanded);
   const toggleSelectUser = isExpanded => setIsSelectUserOpen(isExpanded);
   const toggleSelectObjective = isExpanded => setIsSelectObjectiveOpen(isExpanded);
-  const onResultTypeChange = (val: any) => setResultType(val);
-  const onBinaryButtonChange = (val: any) => setBinaryButtonType(val);
 
   const departmentOptions = map(departmentsData.data, d => ({ value: d.id, label: d.name }));
-  const objectiveOptions = map(objectiveData.data, d => ({ value: d.id, label: d.name }));
-
+  const filterObjective = filter(objectiveData?.data, (d) => isEmpty(d.children));
+  const objectiveOptions = map(filterObjective, d => ({ value: d.id, label: d.title }));
+  
   const usersOptions = map(usersData.data, d => ({
     value: d.id,
     label: `${d.firstName} ${d.lastName}`
@@ -136,16 +121,17 @@ export function KeyResultsModal(props: IProps) {
 
   useEffect(() => {
     if (modalType === ModalType.EDIT && !isEmpty(keyResultData)) {
-      const { title, description, owner, department } = keyResultData;
+      const { objective, title, owner, department, ...restValue } = keyResultData;
       setValues({
         ...values,
-        departmentName: find(departmentOptions, d => d.value === department.id),
-        ownerName: find(usersOptions, d => d.value === owner.id),
-        keyResultTitle: title,
-        description: description
+        ...restValue,
+        departmentName: find(departmentOptions, d => d.value === department?.id),
+        ownerName: find(usersOptions, d => d.value === owner?.id),
+        objectiveName: find(objectiveOptions, d => d.value === objective?.id),
+        keyResultTitle: title
       });
     } else {
-      setValues({ ...formInitState });
+        setValues({ ...values, ...formInitState });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalType, keyResultData]);
@@ -153,28 +139,28 @@ export function KeyResultsModal(props: IProps) {
   const handleModalToggle = () => {
     onCloseModal();
   };
+  const keyResultPayload = () => {
+    return {
+        department: find(departmentsData.data, d => d.id === values.departmentName.value),
+        owner: find(usersData.data, d => d.id === values.ownerName.value),
+        objective: find(filterObjective, d => d.id === values.objectiveName.value),
+        title: values.keyResultTitle,
+        description: values.description,
+        currentState: Number(values.currentState),
+        targetState: Number(values.targetState)
+      };
+  };
   const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
+        const payload = keyResultPayload();
       if (modalType === ModalType.EDIT && !isEmpty(keyResultData)) {
-        const payload = {
-          department: find(departmentsData.data, d => d.id === values.departmentName.value),
-          owner: find(usersData.data, d => d.id === values.ownerName.value),
-          title: values.keyResultTitle,
-          description: values.description
-        };
         await editKeyResultData({ payload, id: keyResultData.id });
       } else {
-        await cKeyResult({
-          department: find(departmentsData.data, d => d.id === values.departmentName.value),
-          owner: find(usersData.data, d => d.id === values.ownerName.value),
-          title: values.keyResultTitle,
-          description: values.description
-        });
+        await cKeyResult(payload);
       }
       onCloseModal();
     } catch (error) {
-      onCloseModal();
     }
   };
   const onDepartmentChange = (event, selection) => {
@@ -234,6 +220,18 @@ export function KeyResultsModal(props: IProps) {
       keyResultTitle: value || ''
     });
   };
+  const onCurrentStateChange = value => {
+    setValues({
+      ...values,
+      currentState: value
+    });
+  };
+  const onTargetStateChange = value => {
+    setValues({
+      ...values,
+      targetState: value
+    });
+  };
   const onDescriptionChange = value => {
     setValues({
       ...values,
@@ -241,45 +239,14 @@ export function KeyResultsModal(props: IProps) {
     });
   };
 
-  const buttonleft = () => {
-    return (
-      <>
-        <ToolbarItem>
-          <Button
-            onClick={() => onResultTypeChange(ResultTypes.PERCENTAGE)}
-            variant={resultType === ResultTypes.PERCENTAGE ? ButtonVariant.primary : ButtonVariant.secondary}
-          >
-            %
-          </Button>
-        </ToolbarItem>
-        <ToolbarItem>
-          <Button
-            onClick={() => onResultTypeChange(ResultTypes.BINARY)}
-            variant={resultType === ResultTypes.BINARY ? ButtonVariant.primary : ButtonVariant.secondary}
-          >
-            Binary
-          </Button>
-        </ToolbarItem>
-        <ToolbarItem>
-          <Button
-            onClick={() => onResultTypeChange(ResultTypes.NUMBER)}
-            variant={resultType === ResultTypes.NUMBER ? ButtonVariant.primary : ButtonVariant.secondary}
-          >
-            Number
-          </Button>
-        </ToolbarItem>
-      </>
-    );
-  };
-
   const renderPercentage = () => {
-    if (resultType === ResultTypes.PERCENTAGE) {
       return (
         <Grid hasGutter>
           <GridItem span={6}>
             <FormGroup label="Start" isRequired fieldId="start_start">
               <InputGroup>
-                <TextInput id="start_start" type="text" aria-label="start input field" />
+                <TextInput value={values.currentState}
+                onChange={onCurrentStateChange} id="start_start" type="number" aria-label="start input field" />
                 <InputGroupText id="start_p">%</InputGroupText>
               </InputGroup>
             </FormGroup>
@@ -287,95 +254,20 @@ export function KeyResultsModal(props: IProps) {
           <GridItem span={6}>
             <FormGroup label="Target" isRequired fieldId="target_start">
               <InputGroup>
-                <TextInput id="target_start" type="text" aria-label="target input field" />
+                <TextInput value={values.targetState}
+                onChange={onTargetStateChange} id="target_start" type="number" aria-label="target input field" />
                 <InputGroupText id="target_p">%</InputGroupText>
               </InputGroup>
             </FormGroup>
           </GridItem>
         </Grid>
       );
-    } else {
-      return null;
-    }
-  };
-  const renderBinary = () => {
-    if (resultType === ResultTypes.BINARY) {
-      return (
-        <Toolbar name="resultType" id="resultType">
-          <ToolbarContent className="p-l-0">
-            <ToolbarGroup variant="filter-group">
-              <>
-                <ToolbarItem>
-                  <Button
-                    onClick={() => onBinaryButtonChange(BinaryButtonType.IN_PROGRESS)}
-                    variant={
-                      binaryButtonType === BinaryButtonType.IN_PROGRESS
-                        ? ButtonVariant.primary
-                        : ButtonVariant.secondary
-                    }
-                  >
-                    In Progress
-                  </Button>
-                </ToolbarItem>
-                <ToolbarItem>
-                  <Button
-                    onClick={() => onBinaryButtonChange(BinaryButtonType.DONE)}
-                    variant={
-                      binaryButtonType === BinaryButtonType.DONE ? ButtonVariant.primary : ButtonVariant.secondary
-                    }
-                  >
-                    Done
-                  </Button>
-                </ToolbarItem>
-              </>
-            </ToolbarGroup>
-          </ToolbarContent>
-        </Toolbar>
-      );
-    } else {
-      return null;
-    }
-  };
-
-  const renderNumber = () => {
-    if (resultType === ResultTypes.NUMBER) {
-      return (
-        <Grid hasGutter>
-          <GridItem span={6}>
-            <FormGroup label="Start" isRequired fieldId="start_number">
-              <InputGroup>
-                <TextInput id="start_number" type="text" aria-label="start number input field" />
-              </InputGroup>
-            </FormGroup>
-          </GridItem>
-          <GridItem span={6}>
-            <FormGroup label="Target" isRequired fieldId="target_number">
-              <InputGroup>
-                <TextInput id="target_number" type="text" aria-label="target number input field" />
-              </InputGroup>
-            </FormGroup>
-          </GridItem>
-        </Grid>
-      );
-    } else {
-      return null;
-    }
-  };
-
-  const buttonright = () => {
-    return (
-      <React.Fragment>
-        {renderPercentage()}
-        {renderBinary()}
-        {renderNumber()}
-      </React.Fragment>
-    );
   };
 
   return (
     <Modal
       className="keyresult-modal"
-      title="Create Key Result"
+      title={modalType === ModalType.CREATE ? "Create Key Result" : "Update Key Result"}
       isOpen={isModalOpen}
       variant={ModalVariant.small}
       onClose={handleModalToggle}
@@ -473,19 +365,8 @@ export function KeyResultsModal(props: IProps) {
           />
         </FormGroup>
         <FormGroup label="Result Type" fieldId={'resultType'} isRequired>
-          <Toolbar name="resultType" id="resultType">
-            <ToolbarContent className="p-l-0">
-              <Flex direction={{ default: 'column' }}>
-                <FlexItem>
-                  <ToolbarGroup variant="filter-group">{buttonleft()}</ToolbarGroup>
-                </FlexItem>
-                <FlexItem>
-                  <ToolbarGroup>{buttonright()}</ToolbarGroup>
-                </FlexItem>
-              </Flex>
-            </ToolbarContent>
-          </Toolbar>
-        </FormGroup>
+        {renderPercentage()}
+      </FormGroup>
       </Form>
     </Modal>
   );
