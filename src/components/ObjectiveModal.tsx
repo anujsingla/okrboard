@@ -9,15 +9,18 @@ import {
   SelectVariant,
   FormGroup,
   Spinner,
-  Form
+  Form,
+  FormSelect,
+  FormSelectOption,
+  Switch
 } from '@patternfly/react-core';
 import React, { useState, useEffect } from 'react';
-import { find, map, isEmpty } from 'lodash';
+import { find, map, isEmpty, filter } from 'lodash';
 import { ILabel } from '../models/shared';
 import { DateRangePicker, FocusedInputShape } from 'react-dates';
 import moment from 'moment-timezone';
 import { useMutation, queryCache, useQuery } from 'react-query';
-import { createObjective, editObjective, getAllDepartments, getUsers } from '../api/apis';
+import { createObjective, editObjective, getAllDepartments, getObjectives, getUsers } from '../api/apis';
 import { addSuccessMessage, addDangerMessage } from '../utils/alertUtil';
 import { ModalType } from './Objectives';
 import { ReactQueryConstant } from '../models/reactQueryConst';
@@ -36,6 +39,9 @@ export interface IFormData {
   startDate?: string;
   departmentName?: ILabel;
   ownerName?: ILabel;
+  status?: string;
+  isToggleSwitch?: boolean;
+  objectiveName?: ILabel;
 }
 
 const formInitState: IFormData = {
@@ -50,8 +56,18 @@ const formInitState: IFormData = {
   ownerName: {
     label: '',
     value: ''
-  }
+  },
+  objectiveName: {
+    label: '',
+    value: ''
+  },
+  status: 'In Progress',
+  isToggleSwitch: false
 };
+
+const status = ['In Progress', 'Done'];
+
+const statusOptions = map(status, (s) => ({label: s, value: s}));
 
 export function ObjectiveModal(props: IProps) {
   const { isModalOpen, onCloseModal, modalType, objectiveData } = props;
@@ -59,6 +75,8 @@ export function ObjectiveModal(props: IProps) {
   const [isSelectDepartmentOpen, setIsSelectDepartmentOpen] = useState(false);
   const [isSelectUserOpen, setIsSelectUserOpen] = useState(false);
   const [focusedInput, setFocusedInput] = useState<FocusedInputShape>(null);
+  const [isSelectObjectiveOpen, setIsSelectObjectiveOpen] = useState(false);
+
   const [sObjective, saveObjectiveInfo] = useMutation(createObjective, {
     onError: () => {
       addDangerMessage('Error in creating objective.');
@@ -90,29 +108,36 @@ export function ObjectiveModal(props: IProps) {
     staleTime: Infinity
   });
 
+  const objectivesData = useQuery(ReactQueryConstant.OBJECTIVES, getObjectives, {
+    staleTime: Infinity
+  });
+
   const toggleSelectDepartment = isExpanded => setIsSelectDepartmentOpen(isExpanded);
   const toggleSelectUser = isExpanded => setIsSelectUserOpen(isExpanded);
+  const toggleSelectObjective = isExpanded => setIsSelectObjectiveOpen(isExpanded);
 
-  const departmentOptions = map(departmentsData.data, d => ({ value: d.id, label: d.name }));
-  const usersOptions = map(usersData.data, d => ({
+  const departmentOptions = map(departmentsData?.data, d => ({ value: d.id, label: d.name }));
+  const usersOptions = map(usersData?.data, d => ({
     value: d.id,
     label: `${d.firstName} ${d.lastName}`
   }));
+  const filterObjective = filter(objectivesData?.data, (d) => isEmpty(d.keyResults));
+  const objectiveOptions = map(filterObjective, d => ({ value: d.id, label: d.title }));
 
   useEffect(() => {
     if (modalType === ModalType.EDIT && !isEmpty(objectiveData)) {
-      const { title, startDate, endDate, description, owner, department } = objectiveData;
+      const { title, owner, department, ...restValue } = objectiveData;
       setValues({
         ...values,
+        ...restValue,
         departmentName: find(departmentOptions, d => d.value === department.id),
         ownerName: find(usersOptions, d => d.value === owner.id),
         objectiveTitle: title,
-        startDate: startDate,
-        endDate: endDate,
-        description: description
+        isToggleSwitch: isEmpty(objectiveData?.parent) ? false : true,
+        objectiveName: find(objectiveOptions, d => d.value === objectiveData?.parent?.id),
       });
     } else {
-      setValues({ ...formInitState });
+      setValues({ ...values, ...formInitState });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalType, objectiveData]);
@@ -120,28 +145,26 @@ export function ObjectiveModal(props: IProps) {
   const handleModalToggle = () => {
     onCloseModal();
   };
+  const objectivePayload = () => {
+      return {
+        department: find(departmentsData.data, d => d.id === values.departmentName.value),
+        owner: find(usersData.data, d => d.id === values.ownerName.value),
+        parent: find(filterObjective, d => d.id === values.objectiveName.value),
+        title: values.objectiveTitle,
+        startDate: values.startDate,
+        endDate: values.endDate,
+        description: values.description,
+        status: values.status
+      }
+  }
   const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
+        const payload = objectivePayload();
       if (modalType === ModalType.EDIT && !isEmpty(objectiveData)) {
-        const payload = {
-          department: find(departmentsData.data, d => d.id === values.departmentName.value),
-          owner: find(usersData.data, d => d.id === values.ownerName.value),
-          title: values.objectiveTitle,
-          startDate: values.startDate,
-          endDate: values.endDate,
-          description: values.description
-        };
         await editObjectiveData({ payload, id: objectiveData.id });
       } else {
-        await sObjective({
-          department: find(departmentsData.data, d => d.id === values.departmentName.value),
-          owner: find(usersData.data, d => d.id === values.ownerName.value),
-          title: values.objectiveTitle,
-          startDate: values.startDate,
-          endDate: values.endDate,
-          description: values.description
-        });
+        await sObjective(payload);
       }
       onCloseModal();
     } catch (error) {
@@ -195,6 +218,13 @@ export function ObjectiveModal(props: IProps) {
       description: value || ''
     });
   };
+
+  const onStatusChange = value => {
+    setValues({
+      ...values,
+      status: value || ''
+    });
+  };
   const onDatesChange = ({ startDate, endDate }) => {
     if (endDate && endDate.isSameOrAfter(startDate)) {
       setValues({
@@ -204,10 +234,33 @@ export function ObjectiveModal(props: IProps) {
       });
     }
   };
+  const onToggleSwitch = isChecked => {
+    setValues({
+      ...values,
+      isToggleSwitch: isChecked || false
+    });
+  };
+  const onObjectiveChange = (event, selection) => {
+    setValues({
+      ...values,
+      objectiveName: find(objectiveOptions, d => d.value === selection)
+    });
+    toggleSelectObjective(false);
+  };
+  const onClearObjective = () => {
+    setValues({
+      ...values,
+      objectiveName: {
+        label: '',
+        value: ''
+      }
+    });
+    toggleSelectObjective(false);
+  };
   return (
     <Modal
       className="objective-modal"
-      title="Create Objective"
+      title={modalType === ModalType.CREATE ? "Create Objective" : "Update Objective"}
       isOpen={isModalOpen}
       variant={ModalVariant.small}
       onClose={handleModalToggle}
@@ -274,6 +327,34 @@ export function ObjectiveModal(props: IProps) {
             ))}
           </Select>
         </FormGroup>
+        <FormGroup fieldId={'parentobjective'}>
+        <Switch
+          aria-label="parentobjective"
+          label={'Parent Objective'}
+          labelOff={'Parent Objective'}
+          isChecked={values.isToggleSwitch}
+          onChange={onToggleSwitch}
+          />
+      </FormGroup>
+      {values.isToggleSwitch &&
+        <FormGroup label="Parent Objective" fieldId={'Objective'}>
+          <Select
+            id="objective" //Needs to be unique, but I don't have time
+            variant={SelectVariant.typeahead}
+            isOpen={isSelectObjectiveOpen}
+            onToggle={toggleSelectObjective}
+            onSelect={onObjectiveChange}
+            menuAppendTo="parent"
+            onClear={onClearObjective}
+            selections={values?.objectiveName?.label}
+          >
+            {(objectiveOptions || []).map((value, index) => (
+              <SelectOption key={`${value.value}-${index}`} value={value.value}>
+                {value.label}
+              </SelectOption>
+            ))}
+          </Select>
+        </FormGroup>}
         <FormGroup label="Title" fieldId={'Title'} isRequired>
           <TextInput
             isRequired
@@ -292,6 +373,13 @@ export function ObjectiveModal(props: IProps) {
             id="objective_description"
           />
         </FormGroup>
+        <FormGroup label="Status" fieldId={'status'} isRequired>
+        <FormSelect value={values.status} onChange={onStatusChange} aria-label="FormSelect Input">
+        {statusOptions.map((option, index) => (
+          <FormSelectOption key={index} value={option.value} label={option.label} />
+        ))}
+      </FormSelect>
+      </FormGroup>
         <FormGroup label="Date" fieldId={'Date'} isRequired>
           <DateRangePicker
             onDatesChange={onDatesChange}

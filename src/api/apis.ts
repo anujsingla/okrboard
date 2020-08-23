@@ -7,10 +7,20 @@ export async function getAllDepartments(): Promise<any> {
   return getUri<any>(uri);
 }
 
-export async function addDepartment(payload): Promise<any> {
+export async function createDepartment(payload): Promise<any> {
   const uri = `${prefixUrl}/departments`;
   return postUri<any>(uri, payload);
 }
+
+export function editDepartment({ id, payload }): Promise<any> {
+    const uri = `${prefixUrl}/departments/${id}`;
+    return putUri<any>(uri, payload);
+}
+
+export function deleteDepartment({ id }): Promise<any> {
+    const uri = `${prefixUrl}/departments/${id}`;
+    return deleteUri<any>(uri);
+  }
 
 export async function createObjective(payload): Promise<any> {
   const uri = `${prefixUrl}/objectives`;
@@ -56,3 +66,13 @@ export async function createUsers(payload): Promise<any> {
   const uri = `${prefixUrl}/users`;
   return await postUri<any>(uri, payload);
 }
+
+export function editUser({ id, payload }): Promise<any> {
+    const uri = `${prefixUrl}/users/${id}`;
+    return putUri<any>(uri, payload);
+}
+
+export async function deleteUser({ id }): Promise<any> {
+    const uri = `${prefixUrl}/users/${id}`;
+    return deleteUri<any>(uri);
+  }
