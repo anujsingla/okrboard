@@ -10,10 +10,6 @@ import {
 } from '@patternfly/react-core';
 import { SearchIcon } from '@patternfly/react-icons';
 import { ObjectiveModal } from '../components/ObjectiveModal';
-// import { useQuery } from 'react-query';
-// import { getObjectives } from '../api/apis';
-// import { ReactQueryConstant } from '../models/reactQueryConst';
-// import {objectiveData} from '../api/jsonData';
 import ObjectiveTable from './ObjectiveTable';
 import { KeyResultsModal } from './KeyResultsModal';
 
@@ -64,16 +60,15 @@ export function Objective() {
   const onEditData = (data: any, isOpenObjectiveModal: boolean) => {
     console.log('onEditData', data, isOpenObjectiveModal);
     if (isOpenObjectiveModal) {
-        setIsObjectiveModalOpen(true);
-        setIsKeyResultModalOpen(false);
+      setIsObjectiveModalOpen(true);
+      setIsKeyResultModalOpen(false);
     } else {
-        setIsObjectiveModalOpen(false);
-        setIsKeyResultModalOpen(true);
+      setIsObjectiveModalOpen(false);
+      setIsKeyResultModalOpen(true);
     }
     setModalType(ModalType.EDIT);
     setEditedData(data);
-
-  }
+  };
 
   return (
     <>
@@ -84,10 +79,10 @@ export function Objective() {
             Create Objective
           </Button>
           <Button isSmall className="pf-u-mb-sm" variant="primary" onClick={onCreateKeyResult}>
-          Create Key Result
-        </Button>
+            Create Key Result
+          </Button>
         </div>
-          <ObjectiveTable onEditData={onEditData} />
+        <ObjectiveTable onEditData={onEditData} />
       </PageSection>{' '}
       <ObjectiveModal
         modalType={modalType}
@@ -96,11 +91,11 @@ export function Objective() {
         onCloseModal={() => setIsObjectiveModalOpen(false)}
       />
       <KeyResultsModal
-      modalType={modalType}
-      keyResultData={editedData}
-      isModalOpen={isKeyResultModalOpen}
-      onCloseModal={() => setIsKeyResultModalOpen(false)}
-    />
+        modalType={modalType}
+        keyResultData={editedData}
+        isModalOpen={isKeyResultModalOpen}
+        onCloseModal={() => setIsKeyResultModalOpen(false)}
+      />
     </>
   );
 }

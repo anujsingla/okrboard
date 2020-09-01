@@ -13,14 +13,14 @@ export async function createDepartment(payload): Promise<any> {
 }
 
 export function editDepartment({ id, payload }): Promise<any> {
-    const uri = `${prefixUrl}/departments/${id}`;
-    return putUri<any>(uri, payload);
+  const uri = `${prefixUrl}/departments/${id}`;
+  return putUri<any>(uri, payload);
 }
 
 export function deleteDepartment({ id }): Promise<any> {
-    const uri = `${prefixUrl}/departments/${id}`;
-    return deleteUri<any>(uri);
-  }
+  const uri = `${prefixUrl}/departments/${id}`;
+  return deleteUri<any>(uri);
+}
 
 export async function createObjective(payload): Promise<any> {
   const uri = `${prefixUrl}/objectives`;
@@ -52,6 +52,11 @@ export async function editKeyResult({ id, payload }): Promise<any> {
   return putUri<any>(uri, payload);
 }
 
+export async function deleteKeyResult({ id }): Promise<any> {
+  const uri = `${prefixUrl}/keyresults/${id}`;
+  return deleteUri<any>(uri);
+}
+
 export async function getKeyResult(): Promise<any> {
   const uri = `${prefixUrl}/keyresults`;
   return getUri<any>(uri);
@@ -68,11 +73,11 @@ export async function createUsers(payload): Promise<any> {
 }
 
 export function editUser({ id, payload }): Promise<any> {
-    const uri = `${prefixUrl}/users/${id}`;
-    return putUri<any>(uri, payload);
+  const uri = `${prefixUrl}/users/${id}`;
+  return putUri<any>(uri, payload);
 }
 
 export async function deleteUser({ id }): Promise<any> {
-    const uri = `${prefixUrl}/users/${id}`;
-    return deleteUri<any>(uri);
-  }
+  const uri = `${prefixUrl}/users/${id}`;
+  return deleteUri<any>(uri);
+}

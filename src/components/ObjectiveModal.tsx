@@ -65,9 +65,9 @@ const formInitState: IFormData = {
   isToggleSwitch: false
 };
 
-const status = ['In Progress', 'Done'];
+const status = ['In Progress', 'Completed', 'Retired'];
 
-const statusOptions = map(status, (s) => ({label: s, value: s}));
+const statusOptions = map(status, s => ({ label: s, value: s }));
 
 export function ObjectiveModal(props: IProps) {
   const { isModalOpen, onCloseModal, modalType, objectiveData } = props;
@@ -121,7 +121,7 @@ export function ObjectiveModal(props: IProps) {
     value: d.id,
     label: `${d.firstName} ${d.lastName}`
   }));
-  const filterObjective = filter(objectivesData?.data, (d) => isEmpty(d.keyResults));
+  const filterObjective = filter(objectivesData?.data, d => isEmpty(d.keyResults));
   const objectiveOptions = map(filterObjective, d => ({ value: d.id, label: d.title }));
 
   useEffect(() => {
@@ -134,7 +134,7 @@ export function ObjectiveModal(props: IProps) {
         ownerName: find(usersOptions, d => d.value === owner.id),
         objectiveTitle: title,
         isToggleSwitch: isEmpty(objectiveData?.parent) ? false : true,
-        objectiveName: find(objectiveOptions, d => d.value === objectiveData?.parent?.id),
+        objectiveName: find(objectiveOptions, d => d.value === objectiveData?.parent?.id)
       });
     } else {
       setValues({ ...values, ...formInitState });
@@ -146,21 +146,21 @@ export function ObjectiveModal(props: IProps) {
     onCloseModal();
   };
   const objectivePayload = () => {
-      return {
-        department: find(departmentsData.data, d => d.id === values.departmentName.value),
-        owner: find(usersData.data, d => d.id === values.ownerName.value),
-        parent: find(filterObjective, d => d.id === values.objectiveName.value),
-        title: values.objectiveTitle,
-        startDate: values.startDate,
-        endDate: values.endDate,
-        description: values.description,
-        status: values.status
-      }
-  }
+    return {
+      department: find(departmentsData.data, d => d.id === values.departmentName.value),
+      owner: find(usersData.data, d => d.id === values.ownerName.value),
+      parent: find(filterObjective, d => d.id === values.objectiveName.value),
+      title: values.objectiveTitle,
+      startDate: values.startDate,
+      endDate: values.endDate,
+      description: values.description,
+      status: values.status
+    };
+  };
   const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
-        const payload = objectivePayload();
+      const payload = objectivePayload();
       if (modalType === ModalType.EDIT && !isEmpty(objectiveData)) {
         await editObjectiveData({ payload, id: objectiveData.id });
       } else {
@@ -260,7 +260,7 @@ export function ObjectiveModal(props: IProps) {
   return (
     <Modal
       className="objective-modal"
-      title={modalType === ModalType.CREATE ? "Create Objective" : "Update Objective"}
+      title={modalType === ModalType.CREATE ? 'Create Objective' : 'Update Objective'}
       isOpen={isModalOpen}
       variant={ModalVariant.small}
       onClose={handleModalToggle}
@@ -328,33 +328,34 @@ export function ObjectiveModal(props: IProps) {
           </Select>
         </FormGroup>
         <FormGroup fieldId={'parentobjective'}>
-        <Switch
-          aria-label="parentobjective"
-          label={'Parent Objective'}
-          labelOff={'Parent Objective'}
-          isChecked={values.isToggleSwitch}
-          onChange={onToggleSwitch}
+          <Switch
+            aria-label="parentobjective"
+            label={'Parent Objective'}
+            labelOff={'Parent Objective'}
+            isChecked={values.isToggleSwitch}
+            onChange={onToggleSwitch}
           />
-      </FormGroup>
-      {values.isToggleSwitch &&
-        <FormGroup label="Parent Objective" fieldId={'Objective'}>
-          <Select
-            id="objective" //Needs to be unique, but I don't have time
-            variant={SelectVariant.typeahead}
-            isOpen={isSelectObjectiveOpen}
-            onToggle={toggleSelectObjective}
-            onSelect={onObjectiveChange}
-            menuAppendTo="parent"
-            onClear={onClearObjective}
-            selections={values?.objectiveName?.label}
-          >
-            {(objectiveOptions || []).map((value, index) => (
-              <SelectOption key={`${value.value}-${index}`} value={value.value}>
-                {value.label}
-              </SelectOption>
-            ))}
-          </Select>
-        </FormGroup>}
+        </FormGroup>
+        {values.isToggleSwitch && (
+          <FormGroup label="Parent Objective" fieldId={'Objective'}>
+            <Select
+              id="objective" //Needs to be unique, but I don't have time
+              variant={SelectVariant.typeahead}
+              isOpen={isSelectObjectiveOpen}
+              onToggle={toggleSelectObjective}
+              onSelect={onObjectiveChange}
+              menuAppendTo="parent"
+              onClear={onClearObjective}
+              selections={values?.objectiveName?.label}
+            >
+              {(objectiveOptions || []).map((value, index) => (
+                <SelectOption key={`${value.value}-${index}`} value={value.value}>
+                  {value.label}
+                </SelectOption>
+              ))}
+            </Select>
+          </FormGroup>
+        )}
         <FormGroup label="Title" fieldId={'Title'} isRequired>
           <TextInput
             isRequired
@@ -374,12 +375,12 @@ export function ObjectiveModal(props: IProps) {
           />
         </FormGroup>
         <FormGroup label="Status" fieldId={'status'} isRequired>
-        <FormSelect value={values.status} onChange={onStatusChange} aria-label="FormSelect Input">
-        {statusOptions.map((option, index) => (
-          <FormSelectOption key={index} value={option.value} label={option.label} />
-        ))}
-      </FormSelect>
-      </FormGroup>
+          <FormSelect value={values.status} onChange={onStatusChange} aria-label="FormSelect Input">
+            {statusOptions.map((option, index) => (
+              <FormSelectOption key={index} value={option.value} label={option.label} />
+            ))}
+          </FormSelect>
+        </FormGroup>
         <FormGroup label="Date" fieldId={'Date'} isRequired>
           <DateRangePicker
             onDatesChange={onDatesChange}

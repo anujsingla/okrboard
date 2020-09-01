@@ -14,10 +14,6 @@ const routes: any = [
   {
     label: 'User',
     path: '/user'
-  },
-  {
-    label: 'Key Result',
-    path: '/keyresult'
   }
 ];
 

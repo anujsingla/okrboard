@@ -29,11 +29,6 @@ export function Routes() {
                 Create Objective
               </NavLink>
             </Nav.Item>
-            <Nav.Item as="li">
-              <NavLink to="/keyresult" className="nav-link">
-                Create Key Result
-              </NavLink>
-            </Nav.Item>
           </Nav>
           <Nav>
             <Nav.Item as="li">

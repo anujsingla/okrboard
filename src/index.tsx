@@ -14,13 +14,13 @@ import * as serviceWorker from './serviceWorker';
 import { HashRouter, Route } from 'react-router-dom';
 import { AppLayout } from './components/AppLayout';
 import { ReactQueryDevtools } from 'react-query-devtools';
-
+const isDevEnv = process.env.NODE_ENV === 'development';
 ReactDOM.render(
   <HashRouter>
     <AppLayout>
       <Route exact={false} path="/" component={App} />
     </AppLayout>
-    <ReactQueryDevtools />
+    {isDevEnv && <ReactQueryDevtools />}
   </HashRouter>,
   document.getElementById('root')
 );

@@ -10,8 +10,6 @@ import {
   FormGroup,
   Spinner,
   Form,
-  InputGroupText,
-  InputGroup,
   Grid,
   GridItem
 } from '@patternfly/react-core';
@@ -23,6 +21,7 @@ import { createKeyResult, editKeyResult, getAllDepartments, getUsers, getObjecti
 import { addSuccessMessage, addDangerMessage } from '../utils/alertUtil';
 import { ModalType } from './Objectives';
 import { ReactQueryConstant } from '../models/reactQueryConst';
+import Slider from 'react-input-slider';
 
 interface IProps {
   isModalOpen: boolean;
@@ -111,9 +110,9 @@ export function KeyResultsModal(props: IProps) {
   const toggleSelectObjective = isExpanded => setIsSelectObjectiveOpen(isExpanded);
 
   const departmentOptions = map(departmentsData.data, d => ({ value: d.id, label: d.name }));
-  const filterObjective = filter(objectiveData?.data, (d) => isEmpty(d.children));
+  const filterObjective = filter(objectiveData?.data, d => isEmpty(d.children));
   const objectiveOptions = map(filterObjective, d => ({ value: d.id, label: d.title }));
-  
+
   const usersOptions = map(usersData.data, d => ({
     value: d.id,
     label: `${d.firstName} ${d.lastName}`
@@ -131,7 +130,7 @@ export function KeyResultsModal(props: IProps) {
         keyResultTitle: title
       });
     } else {
-        setValues({ ...values, ...formInitState });
+      setValues({ ...values, ...formInitState });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalType, keyResultData]);
@@ -141,27 +140,26 @@ export function KeyResultsModal(props: IProps) {
   };
   const keyResultPayload = () => {
     return {
-        department: find(departmentsData.data, d => d.id === values.departmentName.value),
-        owner: find(usersData.data, d => d.id === values.ownerName.value),
-        objective: find(filterObjective, d => d.id === values.objectiveName.value),
-        title: values.keyResultTitle,
-        description: values.description,
-        currentState: Number(values.currentState),
-        targetState: Number(values.targetState)
-      };
+      department: find(departmentsData.data, d => d.id === values.departmentName.value),
+      owner: find(usersData.data, d => d.id === values.ownerName.value),
+      objective: find(filterObjective, d => d.id === values.objectiveName.value),
+      title: values.keyResultTitle,
+      description: values.description,
+      currentState: Number(values.currentState),
+      targetState: Number(values.targetState)
+    };
   };
   const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
-        const payload = keyResultPayload();
+      const payload = keyResultPayload();
       if (modalType === ModalType.EDIT && !isEmpty(keyResultData)) {
         await editKeyResultData({ payload, id: keyResultData.id });
       } else {
         await cKeyResult(payload);
       }
       onCloseModal();
-    } catch (error) {
-    }
+    } catch (error) {}
   };
   const onDepartmentChange = (event, selection) => {
     setValues({
@@ -226,12 +224,6 @@ export function KeyResultsModal(props: IProps) {
       currentState: value
     });
   };
-  const onTargetStateChange = value => {
-    setValues({
-      ...values,
-      targetState: value
-    });
-  };
   const onDescriptionChange = value => {
     setValues({
       ...values,
@@ -239,35 +231,10 @@ export function KeyResultsModal(props: IProps) {
     });
   };
 
-  const renderPercentage = () => {
-      return (
-        <Grid hasGutter>
-          <GridItem span={6}>
-            <FormGroup label="Start" isRequired fieldId="start_start">
-              <InputGroup>
-                <TextInput value={values.currentState}
-                onChange={onCurrentStateChange} id="start_start" type="number" aria-label="start input field" />
-                <InputGroupText id="start_p">%</InputGroupText>
-              </InputGroup>
-            </FormGroup>
-          </GridItem>
-          <GridItem span={6}>
-            <FormGroup label="Target" isRequired fieldId="target_start">
-              <InputGroup>
-                <TextInput value={values.targetState}
-                onChange={onTargetStateChange} id="target_start" type="number" aria-label="target input field" />
-                <InputGroupText id="target_p">%</InputGroupText>
-              </InputGroup>
-            </FormGroup>
-          </GridItem>
-        </Grid>
-      );
-  };
-
   return (
     <Modal
       className="keyresult-modal"
-      title={modalType === ModalType.CREATE ? "Create Key Result" : "Update Key Result"}
+      title={modalType === ModalType.CREATE ? 'Create Key Result' : 'Update Key Result'}
       isOpen={isModalOpen}
       variant={ModalVariant.small}
       onClose={handleModalToggle}
@@ -288,46 +255,6 @@ export function KeyResultsModal(props: IProps) {
       ]}
     >
       <Form action="" onSubmit={handleSubmit}>
-        <FormGroup label="Department" fieldId={'Department'} isRequired>
-          <Select
-            id="department" //Needs to be unique, but I don't have time
-            variant={SelectVariant.typeahead}
-            isOpen={isSelectDepartmentOpen}
-            onToggle={toggleSelectDepartment}
-            onSelect={onDepartmentChange}
-            menuAppendTo="parent"
-            onClear={onClearDepartment}
-            selections={values.departmentName && values.departmentName.label}
-          >
-            {(departmentOptions || []).map((value, index) => (
-              <SelectOption
-                isSelected={value.value === values.departmentName.value}
-                key={`${value.value}-${index}`}
-                value={value.value}
-              >
-                {value.label}
-              </SelectOption>
-            ))}
-          </Select>
-        </FormGroup>
-        <FormGroup label="Owner" fieldId={'Owner'} isRequired>
-          <Select
-            id="owner" //Needs to be unique, but I don't have time
-            variant={SelectVariant.typeahead}
-            isOpen={isSelectUserOpen}
-            onToggle={toggleSelectUser}
-            onSelect={onUserChange}
-            menuAppendTo="parent"
-            onClear={onClearUser}
-            selections={values.ownerName && values.ownerName.label}
-          >
-            {(usersOptions || []).map((value, index) => (
-              <SelectOption key={`${value.value}-${index}`} value={value.value}>
-                {value.label}
-              </SelectOption>
-            ))}
-          </Select>
-        </FormGroup>
         <FormGroup label="Objective" fieldId={'Objective'} isRequired>
           <Select
             id="objective" //Needs to be unique, but I don't have time
@@ -340,6 +267,48 @@ export function KeyResultsModal(props: IProps) {
             selections={values?.objectiveName?.label}
           >
             {(objectiveOptions || []).map((value, index) => (
+              <SelectOption key={`${value.value}-${index}`} value={value.value}>
+                {value.label}
+              </SelectOption>
+            ))}
+          </Select>
+        </FormGroup>
+        {modalType === ModalType.CREATE && (
+          <FormGroup label="Department" fieldId={'Department'} isRequired>
+            <Select
+              id="department" //Needs to be unique, but I don't have time
+              variant={SelectVariant.typeahead}
+              isOpen={isSelectDepartmentOpen}
+              onToggle={toggleSelectDepartment}
+              onSelect={onDepartmentChange}
+              menuAppendTo="parent"
+              onClear={onClearDepartment}
+              selections={values.departmentName && values.departmentName.label}
+            >
+              {(departmentOptions || []).map((value, index) => (
+                <SelectOption
+                  isSelected={value.value === values.departmentName.value}
+                  key={`${value.value}-${index}`}
+                  value={value.value}
+                >
+                  {value.label}
+                </SelectOption>
+              ))}
+            </Select>
+          </FormGroup>
+        )}
+        <FormGroup label="Owner" fieldId={'Owner'} isRequired>
+          <Select
+            id="owner" //Needs to be unique, but I don't have time
+            variant={SelectVariant.typeahead}
+            isOpen={isSelectUserOpen}
+            onToggle={toggleSelectUser}
+            onSelect={onUserChange}
+            menuAppendTo="parent"
+            onClear={onClearUser}
+            selections={values.ownerName && values.ownerName.label}
+          >
+            {(usersOptions || []).map((value, index) => (
               <SelectOption key={`${value.value}-${index}`} value={value.value}>
                 {value.label}
               </SelectOption>
@@ -364,9 +333,16 @@ export function KeyResultsModal(props: IProps) {
             id="objective_description"
           />
         </FormGroup>
-        <FormGroup label="Result Type" fieldId={'resultType'} isRequired>
-        {renderPercentage()}
-      </FormGroup>
+        <FormGroup label="Progress" fieldId={'progress'} isRequired>
+          <Grid hasGutter className="align-item-center">
+            <GridItem span={10}>
+              <Slider x={values.currentState} onChange={v => onCurrentStateChange(v?.x)} />
+            </GridItem>
+            <GridItem span={2}>
+              <TextInput value={values.currentState} onChange={onCurrentStateChange} id="start_start" type="number" />
+            </GridItem>
+          </Grid>
+        </FormGroup>
       </Form>
     </Modal>
   );

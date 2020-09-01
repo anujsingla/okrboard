@@ -1,30 +1,31 @@
-import React from "react";
-import { useTable, useExpanded, useFlexLayout } from "react-table";
+import React, { useState } from 'react';
+import { useTable, useExpanded, useFlexLayout } from 'react-table';
 import { Badge, Button } from '@patternfly/react-core';
 import { useQuery, useMutation, queryCache } from 'react-query';
-import { AngleRightIcon, AngleDownIcon, TrashIcon, PencilAltIcon } from "@patternfly/react-icons";
+import { AngleRightIcon, AngleDownIcon, TrashIcon, PencilAltIcon } from '@patternfly/react-icons';
 import { ReactQueryConstant } from '../models/reactQueryConst';
-import { deleteObjective, getObjectives } from '../api/apis';
-import { getRows } from "../utils/objectiveTableUtils";
+import { deleteKeyResult, deleteObjective, getObjectives } from '../api/apis';
+import { getRows } from '../utils/objectiveTableUtils';
 import { addSuccessMessage, addDangerMessage } from '../utils/alertUtil';
-
+import { formatDate } from '../utils/dateUtils';
+import { ViewObjectiveDataModal } from './ViewObjectiveDataModal';
 
 function Table({ columns: userColumns, data }) {
-    const defaultColumn = React.useMemo(
-        () => ({
-          // When using the useFlexLayout:
-          minWidth: 30, // minWidth is only used as a limit for resizing
-          width: 150, // width is used for both the flex-basis and flex-grow
-          maxWidth: 200, // maxWidth is only used as a limit for resizing
-        }),
-        []
-      )
-const {
+  const defaultColumn = React.useMemo(
+    () => ({
+      // When using the useFlexLayout:
+      minWidth: 30, // minWidth is only used as a limit for resizing
+      width: 150, // width is used for both the flex-basis and flex-grow
+      maxWidth: 200 // maxWidth is only used as a limit for resizing
+    }),
+    []
+  );
+  const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
     rows,
-    prepareRow,
+    prepareRow
     // state: { expanded }
   } = useTable(
     {
@@ -40,10 +41,10 @@ const {
     <>
       <table className="pf-c-table pf-m-grid-md" {...getTableProps()}>
         <thead className="pf-m-nowrap">
-          {headerGroups.map((headerGroup) => (
+          {headerGroups.map(headerGroup => (
             <tr {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map((column) => (
-                <th {...column.getHeaderProps()}>{column.render("Header")}</th>
+              {headerGroup.headers.map(column => (
+                <th {...column.getHeaderProps()}>{column.render('Header')}</th>
               ))}
             </tr>
           ))}
@@ -53,10 +54,8 @@ const {
             prepareRow(row);
             return (
               <tr {...row.getRowProps()}>
-                {row.cells.map((cell) => {
-                  return (
-                    <td {...cell.getCellProps()}>{cell.render("Cell")}</td>
-                  );
+                {row.cells.map(cell => {
+                  return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>;
                 })}
               </tr>
             );
@@ -68,14 +67,16 @@ const {
 }
 
 export interface IProps {
-    onEditData: (data: any, isOpenObjectiveModal: boolean) => void
+  onEditData: (data: any, isOpenObjectiveModal: boolean) => void;
 }
 
 function ObjectiveTable(props: IProps) {
-    const {onEditData} = props;
-    const objectiveData = useQuery(ReactQueryConstant.OBJECTIVES, getObjectives, {
-        staleTime: Infinity
-      });
+  const { onEditData } = props;
+  const [isObjectiveDataModalOpen, setIsObjectiveDataModalOpen] = useState(false);
+  const [viewObjectiveData, setViewObjectiveData] = useState(null);
+  const objectiveData = useQuery(ReactQueryConstant.OBJECTIVES, getObjectives, {
+    staleTime: Infinity
+  });
   const [dObjective] = useMutation(deleteObjective, {
     onError: () => {
       addDangerMessage('Error in deleting objective.');
@@ -88,61 +89,74 @@ function ObjectiveTable(props: IProps) {
       queryCache.invalidateQueries(ReactQueryConstant.KEY_RESULTS);
     }
   });
+  const [dKeyResult] = useMutation(deleteKeyResult, {
+    onError: () => {
+      addDangerMessage('Error in deleting Key Result.');
+    },
+    onSuccess: () => {
+      addSuccessMessage('Successfully Deleted Key Result.');
+    },
+    onSettled: (data, error) => {
+      queryCache.invalidateQueries(ReactQueryConstant.OBJECTIVES);
+      queryCache.invalidateQueries(ReactQueryConstant.KEY_RESULTS);
+    }
+  });
   const columns = React.useMemo(
     () => [
       {
         // Build our expander column
-        id: "expander", // Make sure it has an ID
+        id: 'expander', // Make sure it has an ID
         Header: ({ getToggleAllRowsExpandedProps, isAllRowsExpanded }) => (
-          <span {...getToggleAllRowsExpandedProps()}>
-            {isAllRowsExpanded ? <AngleDownIcon /> : <AngleRightIcon />}
-          </span>
+          <span {...getToggleAllRowsExpandedProps()}>{isAllRowsExpanded ? <AngleDownIcon /> : <AngleRightIcon />}</span>
         ),
         width: 20,
-        Cell: ({ row }) =>
+        Cell: ({ row }) => (
           // Use the row.canExpand and row.getToggleRowExpandedProps prop getter
           // to build the toggle for expanding a row
           <span
-              {...row.getToggleRowExpandedProps({
-                style: {
-                  // We can even use the row.depth property
-                  // and paddingLeft to indicate the depth
-                  // of the row
-                  paddingLeft: `${row.depth * 2}rem`
-                }
-              })}
-            >
-              {!row.canExpand ? null : row.isExpanded ? <AngleDownIcon /> : <AngleRightIcon />}
-            </span>
+            {...row.getToggleRowExpandedProps({
+              style: {
+                // We can even use the row.depth property
+                // and paddingLeft to indicate the depth
+                // of the row
+                paddingLeft: `${row.depth * 2}rem`
+              }
+            })}
+          >
+            {!row.canExpand ? null : row.isExpanded ? <AngleDownIcon /> : <AngleRightIcon />}
+          </span>
+        )
       },
       {
-        Header: "Title",
-        accessor: "title",
-        width: 150,
+        Header: 'Title',
+        accessor: 'title',
+        width: 200,
         Cell: ({ row }) => {
-            // console.log('row', row);
-            const {title, isObjective} = row.original;
-        return (
+          // console.log('row', row);
+          const { title, isObjective } = row.original;
+          return (
             <span {...row.getToggleRowExpandedProps()}>
-            <Badge className="m-r-2">{isObjective ? 'O' : 'KR'}</Badge>{title}
+              <Badge className="m-r-2">{isObjective ? 'O' : 'KR'}</Badge>
+              {title}
             </span>
-        )}
+          );
+        }
       },
       {
-        Header: "Description",
-        accessor: "description",
-        width: 150
-      },
-      {
-        Header: 'Start Date',
-        id: 'objective_start_date',
-        accessor: data => data.startDate,
+        Header: 'Owner',
+        id: 'owner',
+        accessor: data => data?.owner?.firstName,
         width: 80
       },
       {
         Header: 'End Date',
         id: 'objective_end_date',
-        accessor: data => data.endDate,
+        accessor: data => formatDate(data.endDate),
+        width: 80
+      },
+      {
+        Header: 'Completion',
+        accessor: 'completion',
         width: 80
       },
       {
@@ -162,13 +176,23 @@ function ObjectiveTable(props: IProps) {
     []
   );
 
-  const onDeleteNotes = async (event, data) => {
+  const onDeleteObjective = async (event, data) => {
     try {
-       await dObjective({ id: data.id });
+      await dObjective({ id: data?.original?.id });
     } catch (error) {}
   };
+
+  const onDeleteKeyResult = async (event, data) => {
+    try {
+      await dKeyResult({ id: data?.original?.id });
+    } catch (error) {}
+  };
+  const onViewObjective = (event, data) => {
+    setIsObjectiveDataModalOpen(true);
+    setViewObjectiveData(data?.original || null);
+  };
   const onEditNotes = async (event, data) => {
-       onEditData && onEditData(data?.original, data?.original?.isObjective);
+    onEditData && onEditData(data?.original, data?.original?.isObjective);
   };
 
   const renderActionButtons = row => {
@@ -181,25 +205,42 @@ function ObjectiveTable(props: IProps) {
           className="p-r-0 p-l-2"
           variant="plain"
           aria-label="Action"
-          onClick={event => onDeleteNotes(event, row)}
+          onClick={event =>
+            row?.original?.isObjective ? onDeleteObjective(event, row) : onDeleteKeyResult(event, row)
+          }
         >
           <TrashIcon />
         </Button>
+        {row?.original?.isObjective && (
+          <Button
+            className="p-r-0 p-l-2"
+            variant="plain"
+            aria-label="Action"
+            onClick={event => onViewObjective(event, row)}
+          >
+            <i className="fa fa-eye" />
+          </Button>
+        )}
       </span>
     );
   };
 
   // console.log("objectiveData, getRows", objectiveData, getRows());
-  const data = React.useMemo(() => 
-      getRows(objectiveData?.data),
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [objectiveData?.data]
-);
-  console.log('data', data);
+  const data = React.useMemo(
+    () => getRows(objectiveData?.data),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [objectiveData?.data]
+  );
+
   return (
-      <>
+    <>
       <Table columns={columns} data={data || []} />
-      </>
+      <ViewObjectiveDataModal
+        objectiveData={viewObjectiveData}
+        onCloseModal={() => setIsObjectiveDataModalOpen(false)}
+        isModalOpen={isObjectiveDataModalOpen}
+      />
+    </>
   );
 }
 
