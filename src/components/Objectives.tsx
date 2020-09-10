@@ -12,6 +12,9 @@ import { SearchIcon } from '@patternfly/react-icons';
 import { ObjectiveModal } from '../components/ObjectiveModal';
 import ObjectiveTable from './ObjectiveTable';
 import { KeyResultsModal } from './KeyResultsModal';
+import { useQuery } from 'react-query';
+import { ReactQueryConstant } from '../models/reactQueryConst';
+import { getAllDepartments, getObjectives, getUsers } from '../api/apis';
 
 export const noResultFoundRow = [
   {
@@ -47,6 +50,18 @@ export function Objective() {
   const [modalType, setModalType] = useState(ModalType.CREATE);
   const [editedData, setEditedData] = useState(null);
 
+  useQuery(ReactQueryConstant.DEPARTMENTS, getAllDepartments, {
+    staleTime: Infinity
+  });
+
+  useQuery(ReactQueryConstant.USERS, getUsers, {
+    staleTime: Infinity
+  });
+
+  useQuery(ReactQueryConstant.OBJECTIVES, getObjectives, {
+    staleTime: Infinity
+  });
+
   const onCreateObjective = () => {
     setIsObjectiveModalOpen(true);
     setModalType(ModalType.CREATE);
@@ -70,6 +85,11 @@ export function Objective() {
     setEditedData(data);
   };
 
+  const onCloseModal = () => {
+    setIsObjectiveModalOpen(false);
+    setIsKeyResultModalOpen(false);
+  }
+ 
   return (
     <>
       {' '}
@@ -84,18 +104,20 @@ export function Objective() {
         </div>
         <ObjectiveTable onEditData={onEditData} />
       </PageSection>{' '}
-      <ObjectiveModal
+      {isObjectiveModalOpen &&
+        <ObjectiveModal
         modalType={modalType}
         objectiveData={editedData}
         isModalOpen={isObjectiveModalOpen}
-        onCloseModal={() => setIsObjectiveModalOpen(false)}
-      />
-      <KeyResultsModal
+        onCloseModal={onCloseModal}
+      />}
+      {isKeyResultModalOpen &&
+        <KeyResultsModal
         modalType={modalType}
         keyResultData={editedData}
         isModalOpen={isKeyResultModalOpen}
-        onCloseModal={() => setIsKeyResultModalOpen(false)}
-      />
+        onCloseModal={onCloseModal}
+      />}
     </>
   );
 }

@@ -117,26 +117,26 @@ export function ObjectiveModal(props: IProps) {
   const toggleSelectObjective = isExpanded => setIsSelectObjectiveOpen(isExpanded);
 
   const departmentOptions = map(departmentsData?.data, d => ({ value: d.id, label: d.name }));
-  const usersOptions = map(usersData?.data, d => ({
-    value: d.id,
-    label: `${d.firstName} ${d.lastName}`
-  }));
+  const usersOptions = map(usersData?.data, d => ({value: d.id, label: d.firstName}));
   const filterObjective = filter(objectivesData?.data, d => isEmpty(d.keyResults));
   const objectiveOptions = map(filterObjective, d => ({ value: d.id, label: d.title }));
 
   useEffect(() => {
     if (modalType === ModalType.EDIT && !isEmpty(objectiveData)) {
-      const { title, owner, department, ...restValue } = objectiveData;
+      const { startDate, endDate, description, title, owner, department, status } = objectiveData;
       setValues({
         ...values,
-        ...restValue,
-        departmentName: find(departmentOptions, d => d.value === department.id),
-        ownerName: find(usersOptions, d => d.value === owner.id),
+        status,
+        description,
+        endDate,
+        startDate,
+        departmentName: find(departmentOptions, d => d.value === department?.id),
+        ownerName: find(usersOptions, d => d.value === owner?.id),
         objectiveTitle: title,
         isToggleSwitch: isEmpty(objectiveData?.parent) ? false : true,
         objectiveName: find(objectiveOptions, d => d.value === objectiveData?.parent?.id)
       });
-    } else {
+    } else if (modalType === ModalType.CREATE) {
       setValues({ ...values, ...formInitState });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -147,9 +147,9 @@ export function ObjectiveModal(props: IProps) {
   };
   const objectivePayload = () => {
     return {
-      department: find(departmentsData.data, d => d.id === values.departmentName.value),
-      owner: find(usersData.data, d => d.id === values.ownerName.value),
-      parent: find(filterObjective, d => d.id === values.objectiveName.value),
+      department: find(departmentsData.data, d => d.id === values.departmentName?.value),
+      owner: find(usersData.data, d => d.id === values.ownerName?.value),
+      parent: find(filterObjective, d => d.id === values.objectiveName?.value),
       title: values.objectiveTitle,
       startDate: values.startDate,
       endDate: values.endDate,
@@ -168,6 +168,7 @@ export function ObjectiveModal(props: IProps) {
       }
       onCloseModal();
     } catch (error) {
+      console.log('handleSubmit error', error);
       onCloseModal();
     }
   };
@@ -298,13 +299,12 @@ export function ObjectiveModal(props: IProps) {
             onClear={onClearDepartment}
             selections={values.departmentName && values.departmentName.label}
           >
-            {(departmentOptions || []).map((value, index) => (
+            {map(departmentOptions, (value, index) => (
               <SelectOption
-                isSelected={value.value === values.departmentName.value}
-                key={`${value.value}-${index}`}
-                value={value.value}
+                key={`${value?.value}-${index}`}
+                value={value?.value}
               >
-                {value.label}
+                {value?.label}
               </SelectOption>
             ))}
           </Select>
@@ -320,7 +320,7 @@ export function ObjectiveModal(props: IProps) {
             onClear={onClearUser}
             selections={values.ownerName && values.ownerName.label}
           >
-            {(usersOptions || []).map((value, index) => (
+            {map(usersOptions, (value, index) => (
               <SelectOption key={`${value.value}-${index}`} value={value.value}>
                 {value.label}
               </SelectOption>
@@ -348,7 +348,7 @@ export function ObjectiveModal(props: IProps) {
               onClear={onClearObjective}
               selections={values?.objectiveName?.label}
             >
-              {(objectiveOptions || []).map((value, index) => (
+              {map(objectiveOptions, (value, index) => (
                 <SelectOption key={`${value.value}-${index}`} value={value.value}>
                   {value.label}
                 </SelectOption>
@@ -376,7 +376,7 @@ export function ObjectiveModal(props: IProps) {
         </FormGroup>
         <FormGroup label="Status" fieldId={'status'} isRequired>
           <FormSelect value={values.status} onChange={onStatusChange} aria-label="FormSelect Input">
-            {statusOptions.map((option, index) => (
+            {map(statusOptions, (option, index) => (
               <FormSelectOption key={index} value={option.value} label={option.label} />
             ))}
           </FormSelect>

@@ -17,7 +17,7 @@ import React, { useState, useEffect } from 'react';
 import { find, map, isEmpty, filter } from 'lodash';
 import { ILabel } from '../models/shared';
 import { useMutation, useQuery, queryCache } from 'react-query';
-import { createKeyResult, editKeyResult, getAllDepartments, getUsers, getObjectives } from '../api/apis';
+import { createKeyResult, editKeyResult, getUsers, getObjectives } from '../api/apis';
 import { addSuccessMessage, addDangerMessage } from '../utils/alertUtil';
 import { ModalType } from './Objectives';
 import { ReactQueryConstant } from '../models/reactQueryConst';
@@ -31,24 +31,18 @@ interface IProps {
 }
 
 export interface IFormData {
-  departmentName?: ILabel;
   objectiveName?: ILabel;
   ownerName?: ILabel;
   keyResultTitle?: string;
   resultType?: string;
   description?: string;
   currentState?: number;
-  targetState?: number;
 }
 
 const formInitState: IFormData = {
   keyResultTitle: '',
   resultType: '',
   description: '',
-  departmentName: {
-    label: '',
-    value: ''
-  },
   ownerName: {
     label: '',
     value: ''
@@ -57,14 +51,12 @@ const formInitState: IFormData = {
     label: '',
     value: ''
   },
-  currentState: 0,
-  targetState: 100
+  currentState: 0
 };
 
 export function KeyResultsModal(props: IProps) {
   const { isModalOpen, onCloseModal, modalType, keyResultData } = props;
   const [values, setValues] = useState(formInitState);
-  const [isSelectDepartmentOpen, setIsSelectDepartmentOpen] = useState(false);
   const [isSelectUserOpen, setIsSelectUserOpen] = useState(false);
   const [isSelectObjectiveOpen, setIsSelectObjectiveOpen] = useState(false);
 
@@ -80,7 +72,7 @@ export function KeyResultsModal(props: IProps) {
       queryCache.invalidateQueries(ReactQueryConstant.OBJECTIVES);
     }
   });
-  const [editKeyResultData] = useMutation(editKeyResult, {
+  const [editKeyResultData, editKResultInfo] = useMutation(editKeyResult, {
     onError: () => {
       addDangerMessage('Error in editing Key Result.');
     },
@@ -93,10 +85,6 @@ export function KeyResultsModal(props: IProps) {
     }
   });
 
-  const departmentsData = useQuery(ReactQueryConstant.DEPARTMENTS, getAllDepartments, {
-    staleTime: Infinity
-  });
-
   const usersData = useQuery(ReactQueryConstant.USERS, getUsers, {
     staleTime: Infinity
   });
@@ -105,11 +93,9 @@ export function KeyResultsModal(props: IProps) {
     staleTime: Infinity
   });
 
-  const toggleSelectDepartment = isExpanded => setIsSelectDepartmentOpen(isExpanded);
   const toggleSelectUser = isExpanded => setIsSelectUserOpen(isExpanded);
   const toggleSelectObjective = isExpanded => setIsSelectObjectiveOpen(isExpanded);
 
-  const departmentOptions = map(departmentsData.data, d => ({ value: d.id, label: d.name }));
   const filterObjective = filter(objectiveData?.data, d => isEmpty(d.children));
   const objectiveOptions = map(filterObjective, d => ({ value: d.id, label: d.title }));
 
@@ -124,7 +110,6 @@ export function KeyResultsModal(props: IProps) {
       setValues({
         ...values,
         ...restValue,
-        departmentName: find(departmentOptions, d => d.value === department?.id),
         ownerName: find(usersOptions, d => d.value === owner?.id),
         objectiveName: find(objectiveOptions, d => d.value === objective?.id),
         keyResultTitle: title
@@ -140,13 +125,11 @@ export function KeyResultsModal(props: IProps) {
   };
   const keyResultPayload = () => {
     return {
-      department: find(departmentsData.data, d => d.id === values.departmentName.value),
-      owner: find(usersData.data, d => d.id === values.ownerName.value),
-      objective: find(filterObjective, d => d.id === values.objectiveName.value),
+      owner: find(usersData.data, d => d.id === values.ownerName?.value),
+      objective: find(filterObjective, d => d.id === values.objectiveName?.value),
       title: values.keyResultTitle,
       description: values.description,
-      currentState: Number(values.currentState),
-      targetState: Number(values.targetState)
+      currentState: Number(values.currentState)
     };
   };
   const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
@@ -159,24 +142,9 @@ export function KeyResultsModal(props: IProps) {
         await cKeyResult(payload);
       }
       onCloseModal();
-    } catch (error) {}
-  };
-  const onDepartmentChange = (event, selection) => {
-    setValues({
-      ...values,
-      departmentName: find(departmentOptions, d => d.value === selection)
-    });
-    toggleSelectDepartment(false);
-  };
-  const onClearDepartment = () => {
-    setValues({
-      ...values,
-      departmentName: {
-        label: '',
-        value: ''
-      }
-    });
-    toggleSelectDepartment(false);
+    } catch (error) {
+        console.log('handleSubmit error', error);
+    }
   };
   const onUserChange = (event, selection) => {
     setValues({
@@ -240,7 +208,7 @@ export function KeyResultsModal(props: IProps) {
       onClose={handleModalToggle}
       actions={[
         <>
-          {!isLoading && (
+          {!(isLoading || editKResultInfo.isLoading) && (
             <>
               <Button isDisabled={isLoading} key="confirm" variant="primary" onClick={handleSubmit} disabled={false}>
                 Submit
@@ -250,7 +218,7 @@ export function KeyResultsModal(props: IProps) {
               </Button>
             </>
           )}
-          {isLoading && <Spinner size="lg" />}
+          {(isLoading || editKResultInfo.isLoading) && <Spinner size="lg" />}
         </>
       ]}
     >
@@ -273,30 +241,6 @@ export function KeyResultsModal(props: IProps) {
             ))}
           </Select>
         </FormGroup>
-        {modalType === ModalType.CREATE && (
-          <FormGroup label="Department" fieldId={'Department'} isRequired>
-            <Select
-              id="department" //Needs to be unique, but I don't have time
-              variant={SelectVariant.typeahead}
-              isOpen={isSelectDepartmentOpen}
-              onToggle={toggleSelectDepartment}
-              onSelect={onDepartmentChange}
-              menuAppendTo="parent"
-              onClear={onClearDepartment}
-              selections={values.departmentName && values.departmentName.label}
-            >
-              {(departmentOptions || []).map((value, index) => (
-                <SelectOption
-                  isSelected={value.value === values.departmentName.value}
-                  key={`${value.value}-${index}`}
-                  value={value.value}
-                >
-                  {value.label}
-                </SelectOption>
-              ))}
-            </Select>
-          </FormGroup>
-        )}
         <FormGroup label="Owner" fieldId={'Owner'} isRequired>
           <Select
             id="owner" //Needs to be unique, but I don't have time

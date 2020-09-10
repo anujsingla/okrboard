@@ -76,7 +76,9 @@ export function Department() {
   const onDeleteDepartment = async (event, data) => {
     try {
         await dDepartment({ id: data.id });
-      } catch (error) {}
+      } catch (error) {
+        console.log('handleSubmit error', error);
+      }
   };
   const onEditDepartment = async (event, data) => {
     setIsModalOpen(true);

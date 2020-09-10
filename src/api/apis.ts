@@ -1,6 +1,6 @@
 import { getUri, postUri, deleteUri, putUri } from '../utils/fetch';
 
-const prefixUrl = 'http://abhiskum-rdu-2.usersys.redhat.com:8181/okr/api';
+const prefixUrl = 'http://abhiskum-x1.usersys.redhat.com:8181/okr/api';
 
 export async function getAllDepartments(): Promise<any> {
   const uri = `${prefixUrl}/departments`;

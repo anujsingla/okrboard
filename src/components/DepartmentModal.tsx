@@ -92,6 +92,7 @@ export function DepartmentModal(props: IProps) {
       }
       onCloseModal();
     } catch (error) {
+        console.log('handleSubmit error', error);
       onCloseModal();
     }
   };

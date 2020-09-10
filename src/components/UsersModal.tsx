@@ -111,7 +111,7 @@ interface IProps {
       };
       const userPayload = () => {
         return {
-            departments: find(departmentsData?.data, d => d.id === values.departmentName.value),
+           // departments: find(departmentsData?.data, d => d.id === values.departmentName.value),
             firstName: values.firstName,
             lastName: values.lastName
           };
@@ -129,6 +129,7 @@ interface IProps {
         }
         onCloseModal();
       } catch (error) {
+        console.log('handleSubmit error', error);
         onCloseModal();
       }
     };
@@ -190,15 +191,14 @@ interface IProps {
             onClear={onClearDepartment}
             selections={values.departmentName && values.departmentName.label}
           >
-            {(departmentOptions || []).map((value, index) => (
-              <SelectOption
-                isSelected={value.value === values.departmentName.value}
-                key={`${value.value}-${index}`}
-                value={value.value}
-              >
-                {value.label}
-              </SelectOption>
-            ))}
+            {map(departmentOptions, (value, index) => (
+                <SelectOption
+                  key={`${value?.value}-${index}`}
+                  value={value?.value}
+                >
+                  {value?.label}
+                </SelectOption>
+              ))}
           </Select>
         </FormGroup>  
         <FormGroup label="First Name" fieldId={'firstname'} isRequired>

@@ -65,6 +65,7 @@ export const fetchAllFieldsValue = async (dispatch: any) => {
             payload: { fields: getApiResourceObject(fields) }
         });
     } catch (e) {
+        console.log('error', e);
         dispatch({
             type: ApplicationReducerConstants.updateAllFields,
             payload: { fields: getApiResourceObject([], false, true, e.message) }
@@ -80,6 +81,7 @@ export const fetchObjective = async (dispatch: any) => {
             payload: { fields: responses || [] }
         });
     } catch (e) {
+        console.log('error', e);
         dispatch({
             type: ApplicationReducerConstants.fetchObjective,
             payload: { fields: [] }

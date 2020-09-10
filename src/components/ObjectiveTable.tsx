@@ -157,7 +157,15 @@ function ObjectiveTable(props: IProps) {
       {
         Header: 'Completion',
         accessor: 'completion',
-        width: 80
+        width: 80,
+        Cell: ({ row }) => {
+            const { completion, currentState, isObjective } = row.original;
+            return (
+              <span {...row.getToggleRowExpandedProps()}>
+              {isObjective ? completion : currentState}
+              </span>
+            );
+          }
       },
       {
         Header: 'Status',
@@ -179,26 +187,30 @@ function ObjectiveTable(props: IProps) {
   const onDeleteObjective = async (event, data) => {
     try {
       await dObjective({ id: data?.original?.id });
-    } catch (error) {}
+    } catch (error) {
+        console.log('error', error);
+    }
   };
 
   const onDeleteKeyResult = async (event, data) => {
     try {
       await dKeyResult({ id: data?.original?.id });
-    } catch (error) {}
+    } catch (error) {
+        console.log('error', error);
+    }
   };
   const onViewObjective = (event, data) => {
     setIsObjectiveDataModalOpen(true);
     setViewObjectiveData(data?.original || null);
   };
-  const onEditNotes = async (event, data) => {
+  const onEdit = async (event, data) => {
     onEditData && onEditData(data?.original, data?.original?.isObjective);
   };
 
   const renderActionButtons = row => {
     return (
       <span>
-        <Button className="p-r-0 p-l-0" variant="plain" aria-label="Action" onClick={event => onEditNotes(event, row)}>
+        <Button className="p-r-0 p-l-0" variant="plain" aria-label="Action" onClick={event => onEdit(event, row)}>
           <PencilAltIcon />
         </Button>
         <Button
