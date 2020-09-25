@@ -2,7 +2,6 @@ import {
   TextInput,
   Button,
   Modal,
-  ModalVariant,
   FormGroup,
   Spinner,
   Form
@@ -113,11 +112,10 @@ export function DepartmentModal(props: IProps) {
 
   return (
     <Modal
-      className="department-modal"
+      className="department-modal pf-m-md"
       title={modalType === ModalType.CREATE ? "Create Department" : "Update Department"}
       key="department-modal"
       isOpen={isModalOpen}
-      variant={ModalVariant.small}
       onClose={handleModalToggle}
       actions={[
         <>
@@ -135,7 +133,7 @@ export function DepartmentModal(props: IProps) {
         </>
       ]}
     >
-      <Form action="" onSubmit={handleSubmit}>
+      <Form isHorizontal action="" onSubmit={handleSubmit}>
         <FormGroup label="Name" fieldId={'departmentname'} isRequired>
           <TextInput
             isRequired

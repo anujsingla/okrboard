@@ -3,7 +3,6 @@ import map from 'lodash/map';
 import find from 'lodash/find';
 
 export const getRows = (objectiveData) => {
-    console.log("objectiveData", objectiveData);
     if (isEmpty(objectiveData)) {
         return;
     }

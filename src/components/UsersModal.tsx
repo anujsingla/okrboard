@@ -2,7 +2,6 @@ import {
     TextInput,
     Button,
     Modal,
-    ModalVariant,
     FormGroup,
     Spinner,
     Form,
@@ -111,7 +110,7 @@ interface IProps {
       };
       const userPayload = () => {
         return {
-           // departments: find(departmentsData?.data, d => d.id === values.departmentName.value),
+            departments: [find(departmentsData?.data, d => d.id === values.departmentName.value)],
             firstName: values.firstName,
             lastName: values.lastName
           };
@@ -157,11 +156,10 @@ interface IProps {
   
     return (
       <Modal
-        className="user-modal"
+        className="user-modal pf-m-md"
         title={modalType === ModalType.CREATE ? "Create User" : "Update User"}
         key="user-modal"
         isOpen={isModalOpen}
-        variant={ModalVariant.small}
         onClose={handleModalToggle}
         actions={[
           <>
@@ -179,7 +177,7 @@ interface IProps {
           </>
         ]}
       >
-        <Form action="" onSubmit={handleSubmit}>
+        <Form isHorizontal action="" onSubmit={handleSubmit}>
         <FormGroup label="Department" fieldId={'Department'} isRequired>
           <Select
             id="department" //Needs to be unique, but I don't have time

@@ -3,7 +3,6 @@ import {
   TextInput,
   Button,
   Modal,
-  ModalVariant,
   Select,
   SelectOption,
   SelectVariant,
@@ -260,10 +259,9 @@ export function ObjectiveModal(props: IProps) {
   };
   return (
     <Modal
-      className="objective-modal"
+      className="objective-modal pf-m-md"
       title={modalType === ModalType.CREATE ? 'Create Objective' : 'Update Objective'}
       isOpen={isModalOpen}
-      variant={ModalVariant.small}
       onClose={handleModalToggle}
       actions={[
         <>
@@ -287,7 +285,7 @@ export function ObjectiveModal(props: IProps) {
         </>
       ]}
     >
-      <Form action="" onSubmit={handleSubmit}>
+      <Form isHorizontal action="" onSubmit={handleSubmit}>
         <FormGroup label="Department" fieldId={'Department'} isRequired>
           <Select
             id="department" //Needs to be unique, but I don't have time

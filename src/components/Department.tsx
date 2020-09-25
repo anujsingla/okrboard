@@ -26,10 +26,10 @@ export function Department() {
 
   const [dDepartment] = useMutation(deleteDepartment, {
     onError: () => {
-      addDangerMessage('Error in deleting objective.');
+      addDangerMessage('Error in deleting Department.');
     },
     onSuccess: () => {
-      addSuccessMessage('Successfully Deleted Objective.');
+      addSuccessMessage('Successfully Deleted Department.');
     },
     onSettled: (data, error) => {
       queryCache.invalidateQueries(ReactQueryConstant.DEPARTMENTS);

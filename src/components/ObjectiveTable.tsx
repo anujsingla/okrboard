@@ -41,10 +41,10 @@ function Table({ columns: userColumns, data }) {
     <>
       <table className="pf-c-table pf-m-grid-md" {...getTableProps()}>
         <thead className="pf-m-nowrap">
-          {headerGroups.map(headerGroup => (
-            <tr {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map(column => (
-                <th {...column.getHeaderProps()}>{column.render('Header')}</th>
+          {headerGroups.map((headerGroup, index) => (
+            <tr key={index} {...headerGroup.getHeaderGroupProps()}>
+              {headerGroup.headers.map((column, i) => (
+                <th key={i} {...column.getHeaderProps()}>{column.render('Header')}</th>
               ))}
             </tr>
           ))}
@@ -53,9 +53,9 @@ function Table({ columns: userColumns, data }) {
           {rows.map((row, i) => {
             prepareRow(row);
             return (
-              <tr {...row.getRowProps()}>
-                {row.cells.map(cell => {
-                  return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>;
+              <tr key={i} {...row.getRowProps()}>
+                {row.cells.map((cell, ind) => {
+                  return <td key={ind} {...cell.getCellProps()}>{cell.render('Cell')}</td>;
                 })}
               </tr>
             );

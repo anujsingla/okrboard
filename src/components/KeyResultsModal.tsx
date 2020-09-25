@@ -3,7 +3,6 @@ import {
   TextInput,
   Button,
   Modal,
-  ModalVariant,
   Select,
   SelectOption,
   SelectVariant,
@@ -201,10 +200,9 @@ export function KeyResultsModal(props: IProps) {
 
   return (
     <Modal
-      className="keyresult-modal"
+      className="keyresult-modal pf-m-md"
       title={modalType === ModalType.CREATE ? 'Create Key Result' : 'Update Key Result'}
       isOpen={isModalOpen}
-      variant={ModalVariant.small}
       onClose={handleModalToggle}
       actions={[
         <>
@@ -222,7 +220,7 @@ export function KeyResultsModal(props: IProps) {
         </>
       ]}
     >
-      <Form action="" onSubmit={handleSubmit}>
+      <Form isHorizontal action="" onSubmit={handleSubmit}>
         <FormGroup label="Objective" fieldId={'Objective'} isRequired>
           <Select
             id="objective" //Needs to be unique, but I don't have time
